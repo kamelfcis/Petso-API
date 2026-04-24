@@ -1,0 +1,193 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title }} | Petso Admin{% endblock %}
+
+{# ── Inject our premium stylesheet into EVERY admin page ── #}
+{% block extrahead %}
+{{ block.super }}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'admin/petso_admin.css' %}">
+<style>
+  /* ── Per-page micro-tweaks that need Django template tags ── */
+
+  /* Active sidebar item highlight using teal brand */
+  .sidebar .nav-sidebar > .nav-item > .nav-link.active,
+  .sidebar .nav-sidebar > .nav-item.menu-open > .nav-link {
+    position: relative;
+  }
+  .sidebar .nav-sidebar > .nav-item > .nav-link.active::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #00c6a2, #7c3aed);
+    border-radius: 0 3px 3px 0;
+  }
+
+  /* Page title gradient */
+  #content h1,
+  .content-header h1 {
+    background: linear-gradient(135deg, #ffffff 0%, #00c6a2 70%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800 !important;
+  }
+
+  /* "Add <Model>" link in top-right */
+  .object-tools a.addlink {
+    background: linear-gradient(135deg, rgba(0,198,162,.15), rgba(0,198,162,.05)) !important;
+    border: 1px solid rgba(0,198,162,.35) !important;
+    color: #00c6a2 !important;
+    position: relative; overflow: hidden;
+  }
+  .object-tools a.addlink::after {
+    content: '';
+    position: absolute; top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
+    transition: left .5s;
+  }
+  .object-tools a.addlink:hover::after { left: 100%; }
+
+  /* "View on site" link */
+  .object-tools a.viewsitelink {
+    background: rgba(59,130,246,.1) !important;
+    border: 1px solid rgba(59,130,246,.3) !important;
+    color: #3b82f6 !important;
+  }
+
+  /* Styled empty state */
+  #changelist tbody td.action-checkbox:only-child { text-align: center !important; }
+
+  /* tr row number */
+  #result_list tbody tr {
+    animation: fadeRow .3s ease both;
+  }
+  #result_list tbody tr:nth-child(1)  { animation-delay: .03s; }
+  #result_list tbody tr:nth-child(2)  { animation-delay: .06s; }
+  #result_list tbody tr:nth-child(3)  { animation-delay: .09s; }
+  #result_list tbody tr:nth-child(4)  { animation-delay: .12s; }
+  #result_list tbody tr:nth-child(5)  { animation-delay: .15s; }
+  #result_list tbody tr:nth-child(6)  { animation-delay: .18s; }
+  #result_list tbody tr:nth-child(7)  { animation-delay: .21s; }
+  #result_list tbody tr:nth-child(8)  { animation-delay: .24s; }
+  #result_list tbody tr:nth-child(9)  { animation-delay: .27s; }
+  #result_list tbody tr:nth-child(10) { animation-delay: .30s; }
+  @keyframes fadeRow {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* KPI strip at top of every list page */
+  .pd-strip {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .pd-strip-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(13,21,40,.8);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 30px;
+    padding: 6px 14px;
+    font-size: 12px; font-weight: 600; color: #64748b;
+    backdrop-filter: blur(10px);
+  }
+  .pd-strip-pill .val { color: #e2e8f0; font-weight: 800; }
+  .pd-strip-pill .dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #00c6a2;
+    box-shadow: 0 0 6px #00c6a2;
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+  /* Tooltip on table header */
+  #result_list thead th { cursor: default; }
+
+  /* Floating top accent line */
+  .content-wrapper::after {
+    content: '';
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 2px; z-index: 9999;
+    background: linear-gradient(90deg, transparent, #00c6a2, #7c3aed, transparent);
+    opacity: .7;
+    pointer-events: none;
+  }
+</style>
+{% endblock %}
+
+{# ── Subtle JS enhancements on every page ── #}
+{% block footer %}
+{{ block.super }}
+<script>
+(function(){
+  'use strict';
+
+  /* 1. Stagger fieldset fade-in on change-form pages */
+  document.querySelectorAll('fieldset, .inline-group').forEach(function(el, i){
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(16px)';
+    el.style.transition = 'opacity .45s ease, transform .45s ease';
+    setTimeout(function(){ el.style.opacity='1'; el.style.transform='translateY(0)'; }, 60 + i * 80);
+  });
+
+  /* 2. Animate cards (module) on dashboard */
+  document.querySelectorAll('.module').forEach(function(el, i){
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(14px)';
+    el.style.transition = 'opacity .4s ease, transform .4s ease';
+    setTimeout(function(){ el.style.opacity='1'; el.style.transform='translateY(0)'; }, 40 + i * 60);
+  });
+
+  /* 3. Hover glow on submit buttons */
+  document.querySelectorAll('input[type="submit"], button[type="submit"], .button').forEach(function(btn){
+    btn.addEventListener('mouseenter', function(){
+      this.style.boxShadow = '0 6px 28px rgba(0,198,162,.45)';
+    });
+    btn.addEventListener('mouseleave', function(){
+      this.style.boxShadow = '';
+    });
+  });
+
+  /* 4. Add confirmation style for delete links */
+  document.querySelectorAll('.deletelink').forEach(function(a){
+    a.addEventListener('mouseenter', function(){
+      this.style.boxShadow = '0 6px 20px rgba(244,63,94,.4)';
+    });
+    a.addEventListener('mouseleave', function(){
+      this.style.boxShadow = '';
+    });
+  });
+
+  /* 5. Table row hover: show action cursor */
+  document.querySelectorAll('#result_list tbody tr').forEach(function(tr){
+    tr.style.cursor = 'default';
+  });
+
+  /* 6. Auto-expanding textarea */
+  document.querySelectorAll('textarea').forEach(function(ta){
+    ta.addEventListener('input', function(){
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight + 2) + 'px';
+    });
+  });
+
+  /* 7. Toast-style success message with icon */
+  document.querySelectorAll('.messagelist li.success').forEach(function(el){
+    var icon = document.createElement('span');
+    icon.innerHTML = '&#10003;';
+    icon.style.cssText = 'font-size:16px;font-weight:900;color:#22c55e;';
+    el.prepend(icon);
+  });
+  document.querySelectorAll('.messagelist li.error').forEach(function(el){
+    var icon = document.createElement('span');
+    icon.innerHTML = '&#10007;';
+    icon.style.cssText = 'font-size:16px;font-weight:900;color:#f43f5e;';
+    el.prepend(icon);
+  });
+
+})();
+</script>
+{% endblock %}
