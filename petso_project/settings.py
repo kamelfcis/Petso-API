@@ -11,6 +11,9 @@ env = environ.Env(
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Vercel serverless: filesystem is read-only except /tmp; Redis on localhost is unreachable.
+IS_VERCEL = os.environ.get('VERCEL') == '1'
+
 # Read .env file
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
@@ -96,10 +99,19 @@ TEMPLATES = [
 WSGI_APPLICATION = 'petso_project.wsgi.application'
 ASGI_APPLICATION = 'petso_project.asgi.application'
 
-# Database
-DATABASES = {
-    'default': env.db('DATABASE_URL', default=f'sqlite:///{BASE_DIR}/db.sqlite3')
-}
+# Database (Vercel: use Postgres via DATABASE_URL in dashboard; else ephemeral SQLite in /tmp)
+_database_url = os.environ.get('DATABASE_URL', '').strip()
+if IS_VERCEL and not _database_url:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': '/tmp/petso.sqlite3',
+        },
+    }
+else:
+    DATABASES = {
+        'default': env.db('DATABASE_URL', default=f'sqlite:///{BASE_DIR}/db.sqlite3'),
+    }
 
 # Auth
 AUTH_USER_MODEL = 'users.User'
@@ -183,15 +195,23 @@ CELERY_RESULT_BACKEND = env('CELERY_BROKER_URL', default='redis://localhost:6379
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 
-# Channels
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [env('REDIS_URL', default='redis://localhost:6379/1')],
+# Channels (Vercel without REDIS_URL: in-memory layer so HTTP ASGI boots; WebSockets won't scale across instances)
+_redis_url = os.environ.get('REDIS_URL', '').strip()
+if IS_VERCEL and not _redis_url:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
         },
-    },
-}
+    }
+else:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                'hosts': [_redis_url or env('REDIS_URL', default='redis://localhost:6379/1')],
+            },
+        },
+    }
 
 # Jazzmin settings
 JAZZMIN_SETTINGS = {

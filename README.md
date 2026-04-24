@@ -38,9 +38,11 @@ This project was linked for deployment; production URL (after env is configured)
 | `DATABASE_URL` | Postgres URL (e.g. Neon/Vercel Postgres); avoid SQLite on Vercel |
 | `ALLOWED_HOSTS` | `.vercel.app,your-project.vercel.app` |
 | `CSRF_TRUSTED_ORIGINS` | `https://your-project.vercel.app` |
-| `REDIS_URL` | managed Redis URL (Upstash etc.) |
+| `REDIS_URL` | managed Redis URL (Upstash etc.); if unset on Vercel, Channels uses an in-memory layer (HTTP works; WS limited) |
 | `CELERY_BROKER_URL` | same or separate Redis DB index |
 
-3. After first deploy, run migrations against the production database (Vercel **CLI** `vercel env pull` + local `manage.py migrate`, or a one-off script).
+2. **Postgres strongly recommended:** set `DATABASE_URL` in Vercel, then run `python manage.py migrate` against that database (e.g. `vercel env pull` locally, then migrate). Without it, the app may use ephemeral SQLite under `/tmp` and still error until migrations exist on a persistent DB.
+
+3. Vercel sets `VERCEL=1` automatically; the project uses that for safer defaults (writable SQLite path, in-memory Channels when no `REDIS_URL`).
 
 **Limits:** Celery workers and long-lived WebSockets are not first-class on Vercel serverless. Email OTP and background tasks need an external worker (e.g. Railway, Render, or a VPS) calling the same Redis/DB, or refactors to synchronous/email providers.
