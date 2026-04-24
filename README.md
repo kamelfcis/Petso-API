@@ -46,3 +46,66 @@ This project was linked for deployment; production URL (after env is configured)
 3. Vercel sets `VERCEL=1` automatically; the project uses that for safer defaults (writable SQLite path, in-memory Channels when no `REDIS_URL`).
 
 **Limits:** Celery workers and long-lived WebSockets are not first-class on Vercel serverless. Email OTP and background tasks need an external worker (e.g. Railway, Render, or a VPS) calling the same Redis/DB, or refactors to synchronous/email providers.
+
+## Admin dashboard in production
+
+**URL:** `https://<your-domain>/admin/` — e.g. `https://petso-api.vercel.app/admin/`
+
+### 1. Database and migrations
+
+Use a **persistent Postgres** `DATABASE_URL` on Vercel (not ephemeral `/tmp` SQLite). Then apply migrations **to that same database** from your machine:
+
+```bash
+vercel env pull .env.vercel
+# Edit .env.vercel if needed so DATABASE_URL points at production Postgres
+set DJANGO_SETTINGS_MODULE=petso_project.settings
+python manage.py migrate
+```
+
+(On macOS/Linux use `export` instead of `set`.)
+
+### 2. Create a superuser (pick one way)
+
+**A — Interactive (local shell, same `DATABASE_URL` as production):**
+
+```bash
+python manage.py createsuperuser
+```
+
+Enter **email** (this project uses email as login), **name**, and **password**.
+
+**B — Non-interactive (Django built-in, same env as production):**
+
+```bash
+set DJANGO_SUPERUSER_EMAIL=you@example.com
+set DJANGO_SUPERUSER_PASSWORD=your-strong-password
+set DJANGO_SUPERUSER_NAME=Your Name
+python manage.py createsuperuser --noinput
+```
+
+**C — Project helper (reads `BOOTSTRAP_*` env vars, skips if user exists):**
+
+```bash
+set BOOTSTRAP_ADMIN_EMAIL=you@example.com
+set BOOTSTRAP_ADMIN_PASSWORD=your-strong-password
+set BOOTSTRAP_ADMIN_NAME=Admin
+python manage.py bootstrap_admin
+```
+
+Remove bootstrap password from your shell history after use; do not commit these values.
+
+### 3. Vercel environment variables for login / CSRF
+
+Set in the Vercel dashboard (Production):
+
+| Variable | Purpose |
+|----------|---------|
+| `DEBUG` | `False` for real production |
+| `ALLOWED_HOSTS` | `petso-api.vercel.app,.vercel.app` (include your exact host) |
+| `CSRF_TRUSTED_ORIGINS` | `https://petso-api.vercel.app` (must match how you open the site in the browser) |
+
+After changing env vars, trigger a **Redeploy** so the app picks them up.
+
+### 4. Sign in
+
+Open `/admin/`, log in with the **superuser email** and **password** you created (not the Jazzmin “username” field if it appears — this project’s `USERNAME_FIELD` is **email**).
