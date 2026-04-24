@@ -101,8 +101,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'petso_project.wsgi.application'
 ASGI_APPLICATION = 'petso_project.asgi.application'
 
-# Database
-# On Vercel: bundled deployment/petso.sqlite3 is copied to TMPDIR (writable); /var/task is read-only.
+# Database — one `default` connection for Django admin, REST API, and sessions.
+# On Vercel without Postgres: bundled `deployment/petso.sqlite3` is copied to TMPDIR (writable).
 _database_url = os.environ.get('DATABASE_URL', '').strip()
 _bundled_sqlite = BASE_DIR / 'deployment' / 'petso.sqlite3'
 _runtime_sqlite = Path(tempfile.gettempdir()) / 'petso.sqlite3'

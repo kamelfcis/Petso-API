@@ -11,12 +11,12 @@ from django.core.management.base import BaseCommand
 class Command(BaseCommand):
     help = (
         "Create deployment/petso.sqlite3 (fresh) using settings_sqlite_bundle, then migrate + demo superuser. "
-        "Commit deployment/petso.sqlite3 for Vercel. Default admin: admin@petso.local / PetsoVercel2026!"
+        "Commit deployment/petso.sqlite3 for Vercel. Default admin: admin@petso.local / PetsoVercel2026"
     )
 
     def add_arguments(self, parser):
         parser.add_argument("--email", default="admin@petso.local")
-        parser.add_argument("--password", default="PetsoVercel2026!")
+        parser.add_argument("--password", default="PetsoVercel2026")
 
     def handle(self, *args, **options):
         target = Path(settings.BASE_DIR) / "deployment" / "petso.sqlite3"

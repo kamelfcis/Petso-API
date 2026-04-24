@@ -45,6 +45,8 @@ This project was linked for deployment; production URL (after env is configured)
 
 3. Vercel sets `VERCEL=1` automatically; the project uses that for safer defaults (writable SQLite path, in-memory Channels when no `REDIS_URL`).
 
+**Same database for `/admin/` and `/api/`:** Django uses a single `DATABASES['default']`. With the bundled SQLite (leave `DATABASE_URL` unset), JWT login and the admin panel both use that same DB. Bundled demo admin: `admin@petso.local` / `PetsoVercel2026` (see `deployment/README.md`). If you use Postgres instead, point `DATABASE_URL` at one database and run `migrate` + create a superuser there—both admin and API use that URL.
+
 **Limits:** Celery workers and long-lived WebSockets are not first-class on Vercel serverless. Email OTP and background tasks need an external worker (e.g. Railway, Render, or a VPS) calling the same Redis/DB, or refactors to synchronous/email providers.
 
 ## Admin dashboard in production
