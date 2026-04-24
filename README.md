@@ -35,7 +35,7 @@ This project was linked for deployment; production URL (after env is configured)
 |----------|---------|
 | `SECRET_KEY` | long random string |
 | `DEBUG` | `False` |
-| `DATABASE_URL` | Postgres URL (e.g. Neon/Vercel Postgres); avoid SQLite on Vercel |
+| `DATABASE_URL` | **Leave unset** to use bundled `deployment/petso.sqlite3` (copied to `/tmp` on Vercel). Set to `postgres://...` for persistent production data. |
 | `ALLOWED_HOSTS` | `.vercel.app,your-project.vercel.app` |
 | `CSRF_TRUSTED_ORIGINS` | `https://your-project.vercel.app` |
 | `REDIS_URL` | managed Redis URL (Upstash etc.); if unset on Vercel, Channels uses an in-memory layer (HTTP works; WS limited) |

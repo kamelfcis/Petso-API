@@ -1,4 +1,5 @@
 import os
+import tempfile
 from pathlib import Path
 from datetime import timedelta
 import environ
@@ -100,17 +101,29 @@ TEMPLATES = [
 WSGI_APPLICATION = 'petso_project.wsgi.application'
 ASGI_APPLICATION = 'petso_project.asgi.application'
 
-# Database (Vercel: Postgres via DATABASE_URL recommended. Never use project-dir SQLite on serverless.)
+# Database
+# On Vercel: bundled deployment/petso.sqlite3 is copied to TMPDIR (writable); /var/task is read-only.
 _database_url = os.environ.get('DATABASE_URL', '').strip()
-_sqlite_on_vercel = IS_VERCEL and (
-    not _database_url or _database_url.lower().startswith('sqlite')
-)
-if _sqlite_on_vercel:
-    _tmp = os.environ.get('TMPDIR', '/tmp').rstrip('/')
+_bundled_sqlite = BASE_DIR / 'deployment' / 'petso.sqlite3'
+_runtime_sqlite = Path(tempfile.gettempdir()) / 'petso.sqlite3'
+
+if IS_VERCEL and _database_url and not _database_url.lower().startswith('sqlite'):
+    DATABASES = {'default': env.db('DATABASE_URL')}
+elif IS_VERCEL and _bundled_sqlite.is_file():
+    import shutil
+
+    shutil.copy2(_bundled_sqlite, _runtime_sqlite)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(_tmp, 'petso.sqlite3'),
+            'NAME': str(_runtime_sqlite),
+        },
+    }
+elif IS_VERCEL:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': str(_runtime_sqlite),
         },
     }
 else:
