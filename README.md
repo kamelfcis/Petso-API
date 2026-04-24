@@ -14,7 +14,7 @@ python manage.py runserver
 ```
 
 - API docs: `http://127.0.0.1:8000/api/docs/`
-- Postman: import `Petso_Postman_Collection.json` (regenerate with `python tools/build_postman_collection.py`).
+- Postman: import `Petso_Postman_Collection.json` (local + OTP) or `Petso_Postman_Collection.Production.json` (Vercel, no OTP). Regenerate: `python tools/build_postman_collection.py`.
 
 ## GitHub
 

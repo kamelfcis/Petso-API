@@ -1,4 +1,9 @@
-"""Build Petso_Postman_Collection.json (run from repo root: python tools/build_postman_collection.py)."""
+"""Build Postman collections (run from repo root: python tools/build_postman_collection.py).
+
+Outputs:
+- Petso_Postman_Collection.json — local dev, includes OTP / verify-email
+- Petso_Postman_Collection.Production.json — https://petso-api.vercel.app, no OTP requests
+"""
 import json
 from pathlib import Path
 
@@ -39,37 +44,9 @@ def folder(name, items, desc=""):
     return f
 
 
-def main():
-    root = Path(__file__).resolve().parent.parent
-    items = []
-
-    items.append(
-        {
-            "name": "00 - README (Scenario)",
-            "item": [
-                {
-                    "name": "How to run this collection",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": "{{base_url}}/api/docs/",
-                        "description": (
-                            "**Suggested order**\n"
-                            "1. Run server: `python manage.py runserver`\n"
-                            "2. Run Redis + Celery for OTP email: "
-                            "`celery -A petso_project worker -l info`\n"
-                            "3. Register users → copy OTP from console if DEBUG uses console email\n"
-                            "4. Verify Email → Login (same role) → follow folders\n"
-                            "5. Update collection variables from responses (ids)\n\n"
-                            "**Variables**: base_url, emails/passwords, otp_code, tokens, *_id fields."
-                        ),
-                    },
-                }
-            ],
-        }
-    )
-
-    auth_items = [
+def build_auth_items(*, include_otp: bool):
+    """Login/register/refresh. Optional verify-email (OTP) requests for local dev."""
+    items = [
         req(
             "Register - Farmer (مربي)",
             "POST",
@@ -82,7 +59,11 @@ def main():
                 "role": "farmer",
             },
             auth="noauth",
-            desc="Creates farmer account. OTP via Celery or console.",
+            desc=(
+                "Creates farmer account. OTP via Celery or console."
+                if include_otp
+                else "Production: create user; if APIs require verified email, mark user verified in Django admin."
+            ),
         ),
         req(
             "Register - Vet (طبيب)",
@@ -110,124 +91,206 @@ def main():
             },
             auth="noauth",
         ),
-        req(
-            "Verify Email (OTP)",
-            "POST",
-            "/auth/verify-email/",
-            {"email": "{{farmer_email}}", "code": "{{otp_code}}"},
-            auth="noauth",
-            desc="Set otp_code from email or server/worker logs.",
-        ),
-        req(
-            "Verify Email - Vet",
-            "POST",
-            "/auth/verify-email/",
-            {"email": "{{vet_email}}", "code": "{{otp_code_vet}}"},
-            auth="noauth",
-        ),
-        req(
-            "Verify Email - Company",
-            "POST",
-            "/auth/verify-email/",
-            {"email": "{{company_email}}", "code": "{{otp_code_company}}"},
-            auth="noauth",
-        ),
-        req(
-            "Login - Farmer",
-            "POST",
-            "/auth/login/",
-            {"email": "{{farmer_email}}", "password": "{{farmer_password}}"},
-            auth="noauth",
-            tests=[
-                "function uidFromJwt(token) {",
-                "  try {",
-                "    var p = token.split('.')[1];",
-                "    var s = p.replace(/-/g, '+').replace(/_/g, '/');",
-                "    var pad = s.length % 4 ? '='.repeat(4 - s.length % 4) : '';",
-                "    var json = atob(s + pad);",
-                "    return JSON.parse(json).user_id;",
-                "  } catch (e) { return null; }",
-                "}",
-                "try { var j = pm.response.json();",
-                'if (j.access) { pm.collectionVariables.set("access_token", j.access);',
-                "  var uid = uidFromJwt(j.access);",
-                '  if (uid) pm.collectionVariables.set("farmer_user_id", String(uid));',
-                "}",
-                'if (j.refresh) pm.collectionVariables.set("refresh_token", j.refresh);',
-                "} catch (e) {}",
-            ],
-        ),
-        req(
-            "Login - Vet",
-            "POST",
-            "/auth/login/",
-            {"email": "{{vet_email}}", "password": "{{vet_password}}"},
-            auth="noauth",
-            tests=[
-                "function uidFromJwt(token) {",
-                "  try {",
-                "    var p = token.split('.')[1];",
-                "    var s = p.replace(/-/g, '+').replace(/_/g, '/');",
-                "    var pad = s.length % 4 ? '='.repeat(4 - s.length % 4) : '';",
-                "    var json = atob(s + pad);",
-                "    return JSON.parse(json).user_id;",
-                "  } catch (e) { return null; }",
-                "}",
-                "try { var j = pm.response.json();",
-                'if (j.access) { pm.collectionVariables.set("access_token", j.access);',
-                "  var uid = uidFromJwt(j.access);",
-                '  if (uid) pm.collectionVariables.set("vet_user_id", String(uid));',
-                "}",
-                'if (j.refresh) pm.collectionVariables.set("refresh_token", j.refresh);',
-                "} catch (e) {}",
-            ],
-        ),
-        req(
-            "Login - Company",
-            "POST",
-            "/auth/login/",
-            {"email": "{{company_email}}", "password": "{{company_password}}"},
-            auth="noauth",
-            tests=[
-                "function uidFromJwt(token) {",
-                "  try {",
-                "    var p = token.split('.')[1];",
-                "    var s = p.replace(/-/g, '+').replace(/_/g, '/');",
-                "    var pad = s.length % 4 ? '='.repeat(4 - s.length % 4) : '';",
-                "    var json = atob(s + pad);",
-                "    return JSON.parse(json).user_id;",
-                "  } catch (e) { return null; }",
-                "}",
-                "try { var j = pm.response.json();",
-                'if (j.access) { pm.collectionVariables.set("access_token", j.access);',
-                "  var uid = uidFromJwt(j.access);",
-                '  if (uid) pm.collectionVariables.set("company_user_id", String(uid));',
-                "}",
-                'if (j.refresh) pm.collectionVariables.set("refresh_token", j.refresh);',
-                "} catch (e) {}",
-            ],
-        ),
-        req(
-            "Refresh Token",
-            "POST",
-            "/auth/token/refresh/",
-            {"refresh": "{{refresh_token}}"},
-            auth="noauth",
-            tests=[
-                "try { var j = pm.response.json();",
-                'if (j.access) pm.collectionVariables.set("access_token", j.access);',
-                "} catch (e) {}",
-            ],
-        ),
     ]
-    items.append(
-        folder(
-            "01 - Authentication",
-            auth_items,
-            "JWT: Login requests save access_token and refresh_token to collection variables.",
+    if include_otp:
+        items.extend(
+            [
+                req(
+                    "Verify Email (OTP)",
+                    "POST",
+                    "/auth/verify-email/",
+                    {"email": "{{farmer_email}}", "code": "{{otp_code}}"},
+                    auth="noauth",
+                    desc="Set otp_code from email or server/worker logs.",
+                ),
+                req(
+                    "Verify Email - Vet",
+                    "POST",
+                    "/auth/verify-email/",
+                    {"email": "{{vet_email}}", "code": "{{otp_code_vet}}"},
+                    auth="noauth",
+                ),
+                req(
+                    "Verify Email - Company",
+                    "POST",
+                    "/auth/verify-email/",
+                    {"email": "{{company_email}}", "code": "{{otp_code_company}}"},
+                    auth="noauth",
+                ),
+            ]
         )
+    jwt_tests_farmer = [
+        "function uidFromJwt(token) {",
+        "  try {",
+        "    var p = token.split('.')[1];",
+        "    var s = p.replace(/-/g, '+').replace(/_/g, '/');",
+        "    var pad = s.length % 4 ? '='.repeat(4 - s.length % 4) : '';",
+        "    var json = atob(s + pad);",
+        "    return JSON.parse(json).user_id;",
+        "  } catch (e) { return null; }",
+        "}",
+        "try { var j = pm.response.json();",
+        'if (j.access) { pm.collectionVariables.set("access_token", j.access);',
+        "  var uid = uidFromJwt(j.access);",
+        '  if (uid) pm.collectionVariables.set("farmer_user_id", String(uid));',
+        "}",
+        'if (j.refresh) pm.collectionVariables.set("refresh_token", j.refresh);',
+        "} catch (e) {}",
+    ]
+    jwt_tests_vet = [
+        "function uidFromJwt(token) {",
+        "  try {",
+        "    var p = token.split('.')[1];",
+        "    var s = p.replace(/-/g, '+').replace(/_/g, '/');",
+        "    var pad = s.length % 4 ? '='.repeat(4 - s.length % 4) : '';",
+        "    var json = atob(s + pad);",
+        "    return JSON.parse(json).user_id;",
+        "  } catch (e) { return null; }",
+        "}",
+        "try { var j = pm.response.json();",
+        'if (j.access) { pm.collectionVariables.set("access_token", j.access);',
+        "  var uid = uidFromJwt(j.access);",
+        '  if (uid) pm.collectionVariables.set("vet_user_id", String(uid));',
+        "}",
+        'if (j.refresh) pm.collectionVariables.set("refresh_token", j.refresh);',
+        "} catch (e) {}",
+    ]
+    jwt_tests_company = [
+        "function uidFromJwt(token) {",
+        "  try {",
+        "    var p = token.split('.')[1];",
+        "    var s = p.replace(/-/g, '+').replace(/_/g, '/');",
+        "    var pad = s.length % 4 ? '='.repeat(4 - s.length % 4) : '';",
+        "    var json = atob(s + pad);",
+        "    return JSON.parse(json).user_id;",
+        "  } catch (e) { return null; }",
+        "}",
+        "try { var j = pm.response.json();",
+        'if (j.access) { pm.collectionVariables.set("access_token", j.access);',
+        "  var uid = uidFromJwt(j.access);",
+        '  if (uid) pm.collectionVariables.set("company_user_id", String(uid));',
+        "}",
+        'if (j.refresh) pm.collectionVariables.set("refresh_token", j.refresh);',
+        "} catch (e) {}",
+    ]
+    items.extend(
+        [
+            req(
+                "Login - Farmer",
+                "POST",
+                "/auth/login/",
+                {"email": "{{farmer_email}}", "password": "{{farmer_password}}"},
+                auth="noauth",
+                tests=jwt_tests_farmer,
+            ),
+            req(
+                "Login - Vet",
+                "POST",
+                "/auth/login/",
+                {"email": "{{vet_email}}", "password": "{{vet_password}}"},
+                auth="noauth",
+                tests=jwt_tests_vet,
+            ),
+            req(
+                "Login - Company",
+                "POST",
+                "/auth/login/",
+                {"email": "{{company_email}}", "password": "{{company_password}}"},
+                auth="noauth",
+                tests=jwt_tests_company,
+            ),
+            req(
+                "Refresh Token",
+                "POST",
+                "/auth/token/refresh/",
+                {"refresh": "{{refresh_token}}"},
+                auth="noauth",
+                tests=[
+                    "try { var j = pm.response.json();",
+                    'if (j.access) pm.collectionVariables.set("access_token", j.access);',
+                    "} catch (e) {}",
+                ],
+            ),
+        ]
     )
+    return items
 
+
+def readme_folder(*, production: bool):
+    if production:
+        desc = (
+            "**Production (Vercel)** — المتغير `base_url` الافتراضي: `https://petso-api.vercel.app`\n"
+            "1. هذه المجموعة **بدون** طلبات verify-email / OTP.\n"
+            "2. سجّل الدخول أو أنشئ حسابًا؛ إذا كان الـ API يشترط `is_verified`، فعّل المستخدم من `/admin/`.\n"
+            "3. حدّث `category_id`, `product_id`, … من ردود الطلبات.\n\n"
+            "**Variables:** base_url, emails/passwords, tokens, *_id"
+        )
+    else:
+        desc = (
+            "**Suggested order (local)**\n"
+            "1. Run server: `python manage.py runserver`\n"
+            "2. Run Redis + Celery for OTP email: `celery -A petso_project worker -l info`\n"
+            "3. Register users → copy OTP from console if DEBUG uses console email\n"
+            "4. Verify Email → Login (same role) → follow folders\n"
+            "5. Update collection variables from responses (ids)\n\n"
+            "**Variables**: base_url, emails/passwords, otp_code, tokens, *_id fields."
+        )
+    return {
+        "name": "00 - README",
+        "item": [
+            {
+                "name": "Overview",
+                "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": "{{base_url}}/api/docs/",
+                    "description": desc,
+                },
+            }
+        ],
+    }
+
+
+def collection_variables(*, production: bool):
+    base_url = "https://petso-api.vercel.app" if production else "http://127.0.0.1:8000"
+    vars_ = [
+        {"key": "base_url", "value": base_url, "type": "string"},
+        {"key": "farmer_email", "value": "farmer.demo@petso.local", "type": "string"},
+        {"key": "farmer_password", "value": "DemoPass123!", "type": "string"},
+        {"key": "vet_email", "value": "vet.demo@petso.local", "type": "string"},
+        {"key": "vet_password", "value": "DemoPass123!", "type": "string"},
+        {"key": "company_email", "value": "company.demo@petso.local", "type": "string"},
+        {"key": "company_password", "value": "DemoPass123!", "type": "string"},
+    ]
+    if not production:
+        vars_.extend(
+            [
+                {"key": "otp_code", "value": "000000", "type": "string"},
+                {"key": "otp_code_vet", "value": "000000", "type": "string"},
+                {"key": "otp_code_company", "value": "000000", "type": "string"},
+            ]
+        )
+    vars_.extend(
+        [
+            {"key": "access_token", "value": "", "type": "string"},
+            {"key": "refresh_token", "value": "", "type": "string"},
+            {"key": "company_user_id", "value": "1", "type": "string"},
+            {"key": "company_profile_id", "value": "1", "type": "string"},
+            {"key": "category_id", "value": "1", "type": "string"},
+            {"key": "product_id", "value": "1", "type": "string"},
+            {"key": "farmer_profile_id", "value": "1", "type": "string"},
+            {"key": "flock_id", "value": "1", "type": "string"},
+            {"key": "vet_profile_id", "value": "1", "type": "string"},
+            {"key": "farmer_user_id", "value": "1", "type": "string"},
+            {"key": "vet_user_id", "value": "2", "type": "string"},
+            {"key": "post_id", "value": "1", "type": "string"},
+            {"key": "chat_id", "value": "1", "type": "string"},
+        ]
+    )
+    return vars_
+
+
+def append_shared_api_folders(items):
     farmer_items = [
         req("List farmer profiles", "GET", "/farmers/profile/", None),
         req(
@@ -573,51 +636,57 @@ def main():
     ]
     items.append(folder("13 - Admin API", admin_items))
 
-    collection = {
-        "info": {
-            "name": "Petso - Full Scenario",
-            "description": (
-                "Postman collection with example payloads and variables for end-to-end Petso API flows.\n"
-                "**Roles:** farmer | vet | company | admin\n"
-                "Run `python tools/build_postman_collection.py` to regenerate."
-            ),
-            "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-        },
-        "auth": {
-            "type": "bearer",
-            "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}],
-        },
-        "variable": [
-            {"key": "base_url", "value": "http://127.0.0.1:8000", "type": "string"},
-            {"key": "farmer_email", "value": "farmer.demo@petso.local", "type": "string"},
-            {"key": "farmer_password", "value": "DemoPass123!", "type": "string"},
-            {"key": "vet_email", "value": "vet.demo@petso.local", "type": "string"},
-            {"key": "vet_password", "value": "DemoPass123!", "type": "string"},
-            {"key": "company_email", "value": "company.demo@petso.local", "type": "string"},
-            {"key": "company_password", "value": "DemoPass123!", "type": "string"},
-            {"key": "otp_code", "value": "000000", "type": "string"},
-            {"key": "otp_code_vet", "value": "000000", "type": "string"},
-            {"key": "otp_code_company", "value": "000000", "type": "string"},
-            {"key": "access_token", "value": "", "type": "string"},
-            {"key": "refresh_token", "value": "", "type": "string"},
-            {"key": "company_user_id", "value": "1", "type": "string"},
-            {"key": "company_profile_id", "value": "1", "type": "string"},
-            {"key": "category_id", "value": "1", "type": "string"},
-            {"key": "product_id", "value": "1", "type": "string"},
-            {"key": "farmer_profile_id", "value": "1", "type": "string"},
-            {"key": "flock_id", "value": "1", "type": "string"},
-            {"key": "vet_profile_id", "value": "1", "type": "string"},
-            {"key": "farmer_user_id", "value": "1", "type": "string"},
-            {"key": "vet_user_id", "value": "2", "type": "string"},
-            {"key": "post_id", "value": "1", "type": "string"},
-            {"key": "chat_id", "value": "1", "type": "string"},
-        ],
-        "item": items,
-    }
+def main():
+    root = Path(__file__).resolve().parent.parent
+    builds = [
+        (
+            False,
+            "Petso_Postman_Collection.json",
+            "Petso - Full Scenario (local + OTP)",
+            "Postman collection for local dev including verify-email / OTP.\n"
+            "**Roles:** farmer | vet | company | admin\n"
+            "Run `python tools/build_postman_collection.py` to regenerate.",
+        ),
+        (
+            True,
+            "Petso_Postman_Collection.Production.json",
+            "Petso - Production (Vercel, no OTP)",
+            "Postman collection for **https://petso-api.vercel.app** — no verify-email / OTP requests.\n"
+            "**Roles:** farmer | vet | company | admin\n"
+            "Run `python tools/build_postman_collection.py` to regenerate.",
+        ),
+    ]
 
-    out = root / "Petso_Postman_Collection.json"
-    out.write_text(json.dumps(collection, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Wrote {out}")
+    for production, filename, title, description in builds:
+        items = []
+        items.append(readme_folder(production=production))
+        auth_items = build_auth_items(include_otp=not production)
+        items.append(
+            folder(
+                "01 - Authentication",
+                auth_items,
+                "JWT: Login requests save access_token and refresh_token to collection variables.",
+            )
+        )
+        append_shared_api_folders(items)
+
+        collection = {
+            "info": {
+                "name": title,
+                "description": description,
+                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+            },
+            "auth": {
+                "type": "bearer",
+                "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}],
+            },
+            "variable": collection_variables(production=production),
+            "item": items,
+        }
+
+        out = root / filename
+        out.write_text(json.dumps(collection, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"Wrote {out}")
 
 
 if __name__ == "__main__":
