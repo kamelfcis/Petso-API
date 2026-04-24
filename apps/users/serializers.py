@@ -15,35 +15,15 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ('email', 'name', 'password', 'phone_number', 'role')
 
     def create(self, validated_data):
-        from django.utils import timezone
-        import random
-        from datetime import timedelta
-        from .tasks import send_verification_email_task
-
-        user = User.objects.create_user(
+        # Wallet, notification prefs, activity log, OTP, and optional Celery email
+        # are handled in apps.users.signals.create_dependencies_and_verify.
+        return User.objects.create_user(
             email=validated_data['email'],
             password=validated_data['password'],
             name=validated_data.get('name', ''),
             phone_number=validated_data.get('phone_number', ''),
-            role=validated_data.get('role', 'farmer')
+            role=validated_data.get('role', 'farmer'),
         )
-
-        # Generate a 6-digit OTP
-        otp_code = str(random.randint(100000, 999999))
-        OTP.objects.create(
-            user=user,
-            code=otp_code,
-            purpose='verification',
-            expires_at=timezone.now() + timedelta(minutes=15)
-        )
-
-        # Dispatch background task to send the email via Celery
-        try:
-            send_verification_email_task.delay(user.email, otp_code)
-        except Exception as e:
-            pass # Logs will catch task connection errors if redis is down
-
-        return user
 
 class OTPSerializer(serializers.ModelSerializer):
     class Meta:

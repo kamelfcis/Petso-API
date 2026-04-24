@@ -41,8 +41,15 @@ def create_dependencies_and_verify(sender, instance, created, **kwargs):
                 purpose='verification',
                 expires_at=timezone.now() + timedelta(hours=24)
             )
-            # Call Celery task
-            send_verification_email_task.delay(instance.email, otp_code)
-            logger.info(f"OTP generated and Celery task queued for user: {instance.email}")
+            # Queue email via Celery (optional: no broker on serverless → do not fail registration)
+            try:
+                send_verification_email_task.delay(instance.email, otp_code)
+                logger.info("OTP generated and Celery task queued for user: %s", instance.email)
+            except Exception:
+                logger.warning(
+                    "Could not queue verification email for %s (broker/Celery unavailable?)",
+                    instance.email,
+                    exc_info=True,
+                )
         
         logger.info(f"Created wallet and preferences for user: {instance.email}")
