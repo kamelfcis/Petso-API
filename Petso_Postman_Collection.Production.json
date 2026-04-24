@@ -51,6 +51,16 @@
       "type": "string"
     },
     {
+      "key": "admin_email",
+      "value": "admin@petso.local",
+      "type": "string"
+    },
+    {
+      "key": "admin_password",
+      "value": "PetsoVercel2026!",
+      "type": "string"
+    },
+    {
       "key": "access_token",
       "value": "",
       "type": "string"
@@ -126,7 +136,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/api/docs/",
-            "description": "**Production (Vercel)** — المتغير `base_url` الافتراضي: `https://petso-api.vercel.app`\n1. هذه المجموعة **بدون** طلبات verify-email / OTP.\n2. سجّل الدخول أو أنشئ حسابًا؛ إذا كان الـ API يشترط `is_verified`، فعّل المستخدم من `/admin/`.\n3. حدّث `category_id`, `product_id`, … من ردود الطلبات.\n\n**Variables:** base_url, emails/passwords, tokens, *_id"
+            "description": "**Production (Vercel)** — المتغير `base_url` الافتراضي: `https://petso-api.vercel.app`\n1. هذه المجموعة **بدون** طلبات verify-email / OTP.\n2. سجّل الدخول أو أنشئ حسابًا؛ إذا كان الـ API يشترط `is_verified`، فعّل المستخدم من `/admin/`.\n3. حساب الـ demo المضمّن مع SQLite: `admin_email` / `admin_password` (انظر `deployment/README.md`) — نفسها لـ `/admin/`.\n4. حدّث `category_id`, `product_id`, … من ردود الطلبات.\n\n**Variables:** base_url, admin_*, role emails/passwords, tokens, *_id"
           }
         }
       ]
@@ -209,6 +219,46 @@
               "type": "noauth"
             }
           }
+        },
+        {
+          "name": "Login - Admin (bundled Vercel demo)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login/",
+            "description": "Superuser shipped in `deployment/petso.sqlite3` when `DATABASE_URL` is unset. Same `admin_email` / `admin_password` work for Django `/admin/`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "try { var j = pm.response.json();",
+                  "if (j.access) pm.collectionVariables.set(\"access_token\", j.access);",
+                  "if (j.refresh) pm.collectionVariables.set(\"refresh_token\", j.refresh);",
+                  "} catch (e) {}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "Login - Farmer",

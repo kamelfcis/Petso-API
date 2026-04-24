@@ -173,7 +173,29 @@ def build_auth_items(*, include_otp: bool):
         'if (j.refresh) pm.collectionVariables.set("refresh_token", j.refresh);',
         "} catch (e) {}",
     ]
-    items.extend(
+    jwt_tests_admin = [
+        "try { var j = pm.response.json();",
+        'if (j.access) pm.collectionVariables.set("access_token", j.access);',
+        'if (j.refresh) pm.collectionVariables.set("refresh_token", j.refresh);',
+        "} catch (e) {}",
+    ]
+    login_items = []
+    if not include_otp:
+        login_items.append(
+            req(
+                "Login - Admin (bundled Vercel demo)",
+                "POST",
+                "/auth/login/",
+                {"email": "{{admin_email}}", "password": "{{admin_password}}"},
+                auth="noauth",
+                tests=jwt_tests_admin,
+                desc=(
+                    "Superuser shipped in `deployment/petso.sqlite3` when `DATABASE_URL` is unset. "
+                    "Same `admin_email` / `admin_password` work for Django `/admin/`."
+                ),
+            )
+        )
+    login_items.extend(
         [
             req(
                 "Login - Farmer",
@@ -213,6 +235,7 @@ def build_auth_items(*, include_otp: bool):
             ),
         ]
     )
+    items.extend(login_items)
     return items
 
 
@@ -222,8 +245,9 @@ def readme_folder(*, production: bool):
             "**Production (Vercel)** — المتغير `base_url` الافتراضي: `https://petso-api.vercel.app`\n"
             "1. هذه المجموعة **بدون** طلبات verify-email / OTP.\n"
             "2. سجّل الدخول أو أنشئ حسابًا؛ إذا كان الـ API يشترط `is_verified`، فعّل المستخدم من `/admin/`.\n"
-            "3. حدّث `category_id`, `product_id`, … من ردود الطلبات.\n\n"
-            "**Variables:** base_url, emails/passwords, tokens, *_id"
+            "3. حساب الـ demo المضمّن مع SQLite: `admin_email` / `admin_password` (انظر `deployment/README.md`) — نفسها لـ `/admin/`.\n"
+            "4. حدّث `category_id`, `product_id`, … من ردود الطلبات.\n\n"
+            "**Variables:** base_url, admin_*, role emails/passwords, tokens, *_id"
         )
     else:
         desc = (
@@ -262,6 +286,13 @@ def collection_variables(*, production: bool):
         {"key": "company_email", "value": "company.demo@petso.local", "type": "string"},
         {"key": "company_password", "value": "DemoPass123!", "type": "string"},
     ]
+    if production:
+        vars_.extend(
+            [
+                {"key": "admin_email", "value": "admin@petso.local", "type": "string"},
+                {"key": "admin_password", "value": "PetsoVercel2026!", "type": "string"},
+            ]
+        )
     if not production:
         vars_.extend(
             [

@@ -7,7 +7,7 @@ This folder contains **`petso.sqlite3`**: a migrated database copied into `/tmp`
 | Field    | Value               |
 |----------|---------------------|
 | Email    | `admin@petso.local` |
-| Password | `PetsoVercel2026` (letters + digits only, for easy curl/Postman) |
+| Password | `PetsoVercel2026!` (bundled demo; change after first login) |
 
 ## Rebuild the file locally
 

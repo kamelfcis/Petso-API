@@ -1,6 +1,8 @@
+import functools
+
+from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.conf import settings
 from django.utils import timezone
 from apps.users.models import User, UserNotificationPreference, OTP
 from apps.payments.models import Wallet
@@ -11,6 +13,19 @@ import string
 from datetime import timedelta
 
 logger = logging.getLogger(__name__)
+
+
+def _queue_verification_email(email: str, otp_code: str) -> None:
+    try:
+        send_verification_email_task.delay(email, otp_code)
+        logger.info("OTP generated and Celery task queued for user: %s", email)
+    except Exception:
+        logger.warning(
+            "Could not queue verification email for %s (broker/Celery unavailable?)",
+            email,
+            exc_info=True,
+        )
+
 
 def generate_otp_code(length=6):
     return ''.join(random.choices(string.digits, k=length))
@@ -41,15 +56,9 @@ def create_dependencies_and_verify(sender, instance, created, **kwargs):
                 purpose='verification',
                 expires_at=timezone.now() + timedelta(hours=24)
             )
-            # Queue email via Celery (optional: no broker on serverless → do not fail registration)
-            try:
-                send_verification_email_task.delay(instance.email, otp_code)
-                logger.info("OTP generated and Celery task queued for user: %s", instance.email)
-            except Exception:
-                logger.warning(
-                    "Could not queue verification email for %s (broker/Celery unavailable?)",
-                    instance.email,
-                    exc_info=True,
-                )
+            # After DB commit: broker errors must not roll back or break the HTTP response
+            transaction.on_commit(
+                functools.partial(_queue_verification_email, instance.email, otp_code)
+            )
         
         logger.info(f"Created wallet and preferences for user: {instance.email}")
