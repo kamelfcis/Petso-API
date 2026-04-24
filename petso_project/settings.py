@@ -11,8 +11,9 @@ env = environ.Env(
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Vercel serverless: filesystem is read-only except /tmp; Redis on localhost is unreachable.
-IS_VERCEL = os.environ.get('VERCEL') == '1'
+# Vercel serverless: deploy filesystem is read-only except temp dir.
+# VERCEL_ENV is always set on Vercel (production | preview | development); VERCEL=1 is also common.
+IS_VERCEL = bool(os.environ.get('VERCEL_ENV')) or os.environ.get('VERCEL', '').lower() in ('1', 'true')
 
 # Read .env file
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
@@ -99,13 +100,17 @@ TEMPLATES = [
 WSGI_APPLICATION = 'petso_project.wsgi.application'
 ASGI_APPLICATION = 'petso_project.asgi.application'
 
-# Database (Vercel: use Postgres via DATABASE_URL in dashboard; else ephemeral SQLite in /tmp)
+# Database (Vercel: Postgres via DATABASE_URL recommended. Never use project-dir SQLite on serverless.)
 _database_url = os.environ.get('DATABASE_URL', '').strip()
-if IS_VERCEL and not _database_url:
+_sqlite_on_vercel = IS_VERCEL and (
+    not _database_url or _database_url.lower().startswith('sqlite')
+)
+if _sqlite_on_vercel:
+    _tmp = os.environ.get('TMPDIR', '/tmp').rstrip('/')
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': '/tmp/petso.sqlite3',
+            'NAME': os.path.join(_tmp, 'petso.sqlite3'),
         },
     }
 else:
