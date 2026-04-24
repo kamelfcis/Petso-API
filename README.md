@@ -25,8 +25,11 @@ git push -u origin main
 
 ## Vercel
 
-1. Push this repo to GitHub, then in [Vercel](https://vercel.com) **Add New Project** → import `kamelfcis/Petso-API`.
-2. Set **Environment variables** (minimum for a working deploy):
+Repository: [github.com/kamelfcis/Petso-API](https://github.com/kamelfcis/Petso-API).
+
+This project was linked for deployment; production URL (after env is configured): **https://petso-api.vercel.app**
+
+1. In the Vercel project **Settings → Environment Variables**, set at least:
 
 | Variable | Example |
 |----------|---------|
