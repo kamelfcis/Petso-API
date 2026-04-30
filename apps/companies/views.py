@@ -16,6 +16,9 @@ class CompanyViewSet(viewsets.ModelViewSet):
     serializer_class = CompanySerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
 class CompanyAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CompanyAnalytics.objects.all()
     serializer_class = CompanyAnalyticsSerializer

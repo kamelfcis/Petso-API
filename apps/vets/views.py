@@ -3,7 +3,7 @@ from .models import VetProfile, VetReview
 from .serializers import VetProfileSerializer, VetReviewSerializer
 
 class VetProfileViewSet(viewsets.ModelViewSet):
-    queryset = VetProfile.objects.all()
+    queryset = VetProfile.objects.all().order_by('id')
     serializer_class = VetProfileSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
@@ -11,6 +11,10 @@ class VetProfileViewSet(viewsets.ModelViewSet):
         if self.request.user.is_authenticated and self.request.user.role == 'vet':
             return self.queryset.filter(user=self.request.user)
         return self.queryset
+
+    def perform_create(self, serializer):
+        # user is read-only on VetProfileSerializer; must bind the logged-in vet here
+        serializer.save(user=self.request.user)
 
 class VetReviewViewSet(viewsets.ModelViewSet):
     queryset = VetReview.objects.all()
