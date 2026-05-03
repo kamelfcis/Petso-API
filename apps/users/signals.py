@@ -1,4 +1,5 @@
 import functools
+import threading
 
 from django.db import transaction
 from django.db.models.signals import post_save
@@ -25,6 +26,16 @@ def _queue_verification_email(email: str, otp_code: str) -> None:
             email,
             exc_info=True,
         )
+
+
+def _queue_verification_email_async(email: str, otp_code: str) -> None:
+    """Do not block HTTP response on broker TCP connect (can be very slow without Redis)."""
+    threading.Thread(
+        target=_queue_verification_email,
+        args=(email, otp_code),
+        daemon=True,
+        name="petso-queue-verification-email",
+    ).start()
 
 
 def generate_otp_code(length=6):
@@ -56,9 +67,9 @@ def create_dependencies_and_verify(sender, instance, created, **kwargs):
                 purpose='verification',
                 expires_at=timezone.now() + timedelta(hours=24)
             )
-            # After DB commit: broker errors must not roll back or break the HTTP response
+            # After DB commit: never block the client on Celery broker connect
             transaction.on_commit(
-                functools.partial(_queue_verification_email, instance.email, otp_code)
+                functools.partial(_queue_verification_email_async, instance.email, otp_code)
             )
         
         logger.info(f"Created wallet and preferences for user: {instance.email}")
