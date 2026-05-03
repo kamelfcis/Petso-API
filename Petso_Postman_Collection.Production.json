@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "Petso - Production (Vercel, no OTP)",
-    "description": "Postman collection for **https://petso-api.vercel.app** — no verify-email / OTP requests.\n**Roles:** farmer | vet | company | admin\nRun `python tools/build_postman_collection.py` to regenerate.",
+    "name": "Petso - Production (Vercel)",
+    "description": "Postman collection for **https://petso-api.vercel.app** (signup is pre-verified).\n**Roles:** farmer | vet | company | admin\nRun `python tools/build_postman_collection.py` to regenerate.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -136,7 +136,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/api/docs/",
-            "description": "**Production (Vercel)** — المتغير `base_url` الافتراضي: `https://petso-api.vercel.app`\n1. هذه المجموعة **بدون** طلبات verify-email / OTP.\n2. سجّل الدخول أو أنشئ حسابًا؛ إذا كان الـ API يشترط `is_verified`، فعّل المستخدم من `/admin/`.\n3. حساب الـ demo المضمّن مع SQLite: `admin_email` / `admin_password` (انظر `deployment/README.md`) — نفسها لـ `/admin/`.\n4. حدّث `category_id`, `product_id`, … من ردود الطلبات.\n\n**Variables:** base_url, admin_*, role emails/passwords, tokens, *_id"
+            "description": "**Production (Vercel)** — المتغير `base_url` الافتراضي: `https://petso-api.vercel.app`\n1. التسجيل يفعّل الحساب مباشرة (`is_verified`) — لا يوجد verify-email / OTP.\n2. سجّل الدخول أو أنشئ حسابًا ثم تابع المجلدات.\n3. حساب الـ demo المضمّن مع SQLite: `admin_email` / `admin_password` (انظر `deployment/README.md`) — نفسها لـ `/admin/`.\n4. حدّث `category_id`, `product_id`, … من ردود الطلبات.\n\n**Variables:** base_url, admin_*, role emails/passwords, tokens, *_id"
           }
         }
       ]
@@ -155,7 +155,7 @@
               }
             ],
             "url": "{{base_url}}/api/auth/register/",
-            "description": "Production: create user; if APIs require verified email, mark user verified in Django admin.",
+            "description": "Creates farmer account; `is_verified` is true — login with JWT immediately.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{farmer_email}}\",\n  \"password\": \"{{farmer_password}}\",\n  \"name\": \"Farmer Demo\",\n  \"phone_number\": \"+201000000001\",\n  \"role\": \"farmer\"\n}",

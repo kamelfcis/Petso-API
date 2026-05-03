@@ -207,17 +207,6 @@ EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = env('EMAIL_USE_TLS', default=True)
 
-# Celery
-CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = env('CELERY_BROKER_URL', default='redis://localhost:6379/0')
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-# Fail fast when broker is down (otherwise .delay() can stall the process for a long TCP timeout)
-CELERY_BROKER_TRANSPORT_OPTIONS = {
-    'socket_connect_timeout': int(os.environ.get('CELERY_SOCKET_CONNECT_TIMEOUT', '3')),
-    'socket_timeout': int(os.environ.get('CELERY_SOCKET_TIMEOUT', '3')),
-}
-
 # Channels (Vercel without REDIS_URL: in-memory layer so HTTP ASGI boots; WebSockets won't scale across instances)
 _redis_url = os.environ.get('REDIS_URL', '').strip()
 if IS_VERCEL and not _redis_url:

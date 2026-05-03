@@ -1,8 +1,8 @@
 """Build Postman collections (run from repo root: python tools/build_postman_collection.py).
 
 Outputs:
-- Petso_Postman_Collection.json — local dev, includes OTP / verify-email
-- Petso_Postman_Collection.Production.json — https://petso-api.vercel.app, no OTP requests
+- Petso_Postman_Collection.json — local (http://127.0.0.1:8000)
+- Petso_Postman_Collection.Production.json — https://petso-api.vercel.app
 """
 import json
 from pathlib import Path
@@ -44,8 +44,8 @@ def folder(name, items, desc=""):
     return f
 
 
-def build_auth_items(*, include_otp: bool):
-    """Login/register/refresh. Optional verify-email (OTP) requests for local dev."""
+def build_auth_items(*, production: bool):
+    """Register, login, refresh. New accounts are verified at signup (no OTP / verify-email)."""
     items = [
         req(
             "Register - Farmer (مربي)",
@@ -59,11 +59,7 @@ def build_auth_items(*, include_otp: bool):
                 "role": "farmer",
             },
             auth="noauth",
-            desc=(
-                "Creates farmer account. OTP via Celery or console."
-                if include_otp
-                else "Production: create user; if APIs require verified email, mark user verified in Django admin."
-            ),
+            desc="Creates farmer account; `is_verified` is true — login with JWT immediately.",
         ),
         req(
             "Register - Vet (طبيب)",
@@ -92,33 +88,6 @@ def build_auth_items(*, include_otp: bool):
             auth="noauth",
         ),
     ]
-    if include_otp:
-        items.extend(
-            [
-                req(
-                    "Verify Email (OTP)",
-                    "POST",
-                    "/auth/verify-email/",
-                    {"email": "{{farmer_email}}", "code": "{{otp_code}}"},
-                    auth="noauth",
-                    desc="Set otp_code from email or server/worker logs.",
-                ),
-                req(
-                    "Verify Email - Vet",
-                    "POST",
-                    "/auth/verify-email/",
-                    {"email": "{{vet_email}}", "code": "{{otp_code_vet}}"},
-                    auth="noauth",
-                ),
-                req(
-                    "Verify Email - Company",
-                    "POST",
-                    "/auth/verify-email/",
-                    {"email": "{{company_email}}", "code": "{{otp_code_company}}"},
-                    auth="noauth",
-                ),
-            ]
-        )
     jwt_tests_farmer = [
         "function uidFromJwt(token) {",
         "  try {",
@@ -180,7 +149,7 @@ def build_auth_items(*, include_otp: bool):
         "} catch (e) {}",
     ]
     login_items = []
-    if not include_otp:
+    if production:
         login_items.append(
             req(
                 "Login - Admin (bundled Vercel demo)",
@@ -243,8 +212,8 @@ def readme_folder(*, production: bool):
     if production:
         desc = (
             "**Production (Vercel)** — المتغير `base_url` الافتراضي: `https://petso-api.vercel.app`\n"
-            "1. هذه المجموعة **بدون** طلبات verify-email / OTP.\n"
-            "2. سجّل الدخول أو أنشئ حسابًا؛ إذا كان الـ API يشترط `is_verified`، فعّل المستخدم من `/admin/`.\n"
+            "1. التسجيل يفعّل الحساب مباشرة (`is_verified`) — لا يوجد verify-email / OTP.\n"
+            "2. سجّل الدخول أو أنشئ حسابًا ثم تابع المجلدات.\n"
             "3. حساب الـ demo المضمّن مع SQLite: `admin_email` / `admin_password` (انظر `deployment/README.md`) — نفسها لـ `/admin/`.\n"
             "4. حدّث `category_id`, `product_id`, … من ردود الطلبات.\n\n"
             "**Variables:** base_url, admin_*, role emails/passwords, tokens, *_id"
@@ -253,11 +222,9 @@ def readme_folder(*, production: bool):
         desc = (
             "**Suggested order (local)**\n"
             "1. Run server: `python manage.py runserver`\n"
-            "2. Run Redis + Celery for OTP email: `celery -A petso_project worker -l info`\n"
-            "3. Register users → copy OTP from console if DEBUG uses console email\n"
-            "4. Verify Email → Login (same role) → follow folders\n"
-            "5. Update collection variables from responses (ids)\n\n"
-            "**Variables**: base_url, emails/passwords, otp_code, tokens, *_id fields."
+            "2. Register users (pre-verified) → Login (same role) → follow folders\n"
+            "3. Update collection variables from responses (ids)\n\n"
+            "**Variables**: base_url, emails/passwords, tokens, *_id fields."
         )
     return {
         "name": "00 - README",
@@ -291,14 +258,6 @@ def collection_variables(*, production: bool):
             [
                 {"key": "admin_email", "value": "admin@petso.local", "type": "string"},
                 {"key": "admin_password", "value": "PetsoVercel2026!", "type": "string"},
-            ]
-        )
-    if not production:
-        vars_.extend(
-            [
-                {"key": "otp_code", "value": "000000", "type": "string"},
-                {"key": "otp_code_vet", "value": "000000", "type": "string"},
-                {"key": "otp_code_company", "value": "000000", "type": "string"},
             ]
         )
     vars_.extend(
@@ -673,16 +632,16 @@ def main():
         (
             False,
             "Petso_Postman_Collection.json",
-            "Petso - Full Scenario (local + OTP)",
-            "Postman collection for local dev including verify-email / OTP.\n"
+            "Petso - Full Scenario (local)",
+            "Postman collection for local dev at http://127.0.0.1:8000 (signup is pre-verified).\n"
             "**Roles:** farmer | vet | company | admin\n"
             "Run `python tools/build_postman_collection.py` to regenerate.",
         ),
         (
             True,
             "Petso_Postman_Collection.Production.json",
-            "Petso - Production (Vercel, no OTP)",
-            "Postman collection for **https://petso-api.vercel.app** — no verify-email / OTP requests.\n"
+            "Petso - Production (Vercel)",
+            "Postman collection for **https://petso-api.vercel.app** (signup is pre-verified).\n"
             "**Roles:** farmer | vet | company | admin\n"
             "Run `python tools/build_postman_collection.py` to regenerate.",
         ),
@@ -691,7 +650,7 @@ def main():
     for production, filename, title, description in builds:
         items = []
         items.append(readme_folder(production=production))
-        auth_items = build_auth_items(include_otp=not production)
+        auth_items = build_auth_items(production=production)
         items.append(
             folder(
                 "01 - Authentication",

@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "Petso - Full Scenario (local + OTP)",
-    "description": "Postman collection for local dev including verify-email / OTP.\n**Roles:** farmer | vet | company | admin\nRun `python tools/build_postman_collection.py` to regenerate.",
+    "name": "Petso - Full Scenario (local)",
+    "description": "Postman collection for local dev at http://127.0.0.1:8000 (signup is pre-verified).\n**Roles:** farmer | vet | company | admin\nRun `python tools/build_postman_collection.py` to regenerate.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -48,21 +48,6 @@
     {
       "key": "company_password",
       "value": "DemoPass123!",
-      "type": "string"
-    },
-    {
-      "key": "otp_code",
-      "value": "000000",
-      "type": "string"
-    },
-    {
-      "key": "otp_code_vet",
-      "value": "000000",
-      "type": "string"
-    },
-    {
-      "key": "otp_code_company",
-      "value": "000000",
       "type": "string"
     },
     {
@@ -141,7 +126,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/api/docs/",
-            "description": "**Suggested order (local)**\n1. Run server: `python manage.py runserver`\n2. Run Redis + Celery for OTP email: `celery -A petso_project worker -l info`\n3. Register users → copy OTP from console if DEBUG uses console email\n4. Verify Email → Login (same role) → follow folders\n5. Update collection variables from responses (ids)\n\n**Variables**: base_url, emails/passwords, otp_code, tokens, *_id fields."
+            "description": "**Suggested order (local)**\n1. Run server: `python manage.py runserver`\n2. Register users (pre-verified) → Login (same role) → follow folders\n3. Update collection variables from responses (ids)\n\n**Variables**: base_url, emails/passwords, tokens, *_id fields."
           }
         }
       ]
@@ -160,7 +145,7 @@
               }
             ],
             "url": "{{base_url}}/api/auth/register/",
-            "description": "Creates farmer account. OTP via Celery or console.",
+            "description": "Creates farmer account; `is_verified` is true — login with JWT immediately.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{farmer_email}}\",\n  \"password\": \"{{farmer_password}}\",\n  \"name\": \"Farmer Demo\",\n  \"phone_number\": \"+201000000001\",\n  \"role\": \"farmer\"\n}",
@@ -214,82 +199,6 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{company_email}}\",\n  \"password\": \"{{company_password}}\",\n  \"name\": \"Company Owner\",\n  \"phone_number\": \"+201000000003\",\n  \"role\": \"company\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "Verify Email (OTP)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{base_url}}/api/auth/verify-email/",
-            "description": "Set otp_code from email or server/worker logs.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{farmer_email}}\",\n  \"code\": \"{{otp_code}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "Verify Email - Vet",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{base_url}}/api/auth/verify-email/",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{vet_email}}\",\n  \"code\": \"{{otp_code_vet}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "Verify Email - Company",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{base_url}}/api/auth/verify-email/",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{company_email}}\",\n  \"code\": \"{{otp_code_company}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

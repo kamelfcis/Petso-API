@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, OTP, UserNotificationPreference, UserActivityLog
+from .models import User, UserNotificationPreference, UserActivityLog
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -12,23 +12,19 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'name', 'password', 'phone_number', 'role')
+        fields = ('email', 'name', 'password', 'phone_number', 'role', 'is_verified')
+        read_only_fields = ('is_verified',)
 
     def create(self, validated_data):
-        # Wallet, notification prefs, activity log, OTP, and optional Celery email
-        # are handled in apps.users.signals.create_dependencies_and_verify.
+        # Wallet, notification prefs, and activity log are created in apps.users.signals.
         return User.objects.create_user(
             email=validated_data['email'],
             password=validated_data['password'],
             name=validated_data.get('name', ''),
             phone_number=validated_data.get('phone_number', ''),
             role=validated_data.get('role', 'farmer'),
+            is_verified=True,
         )
-
-class OTPSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OTP
-        fields = '__all__'
 
 class UserNotificationPreferenceSerializer(serializers.ModelSerializer):
     class Meta:
