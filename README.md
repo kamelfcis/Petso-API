@@ -217,6 +217,11 @@ Django دائمًا يستخدم `DATABASES['default']`، وبالتالي:
 
 - راجع سجلات السيرفر (traceback)؛ التسجيل لا يعتمد على Celery بعد الآن.
 
+### 4) ما زال يظهر `celery.backends.redis` على الـ VPS
+
+- يعني نسخة المشروع على السيرفر **قديمة** أو بها ملفات قديمة (`petso_project/celery.py` أو `apps/users/tasks.py`).
+- بعد `git pull` شغّل Waitress من جديد؛ إن ظهرت رسالة **RuntimeError** عند البدء فاتبع نص الرسالة (حذف الملفات القديمة + `pip uninstall -y celery`).
+
 ## أوامر مفيدة
 
 ```bash
