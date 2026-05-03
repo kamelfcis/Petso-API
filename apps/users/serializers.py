@@ -1,4 +1,6 @@
+from django.db import transaction
 from rest_framework import serializers
+
 from .models import User, UserNotificationPreference, UserActivityLog
 
 class UserSerializer(serializers.ModelSerializer):
@@ -16,15 +18,17 @@ class RegisterSerializer(serializers.ModelSerializer):
         read_only_fields = ('is_verified',)
 
     def create(self, validated_data):
-        # Wallet, notification prefs, and activity log are created in apps.users.signals.
-        return User.objects.create_user(
-            email=validated_data['email'],
-            password=validated_data['password'],
-            name=validated_data.get('name', ''),
-            phone_number=validated_data.get('phone_number', ''),
-            role=validated_data.get('role', 'farmer'),
-            is_verified=True,
-        )
+        # One transaction: user row + post_save (wallet, prefs, activity) commit together.
+        # Fewer disk syncs on SQLite and fewer round-trips on Postgres than autocommit per INSERT.
+        with transaction.atomic():
+            return User.objects.create_user(
+                email=validated_data['email'],
+                password=validated_data['password'],
+                name=validated_data.get('name', ''),
+                phone_number=validated_data.get('phone_number', ''),
+                role=validated_data.get('role', 'farmer'),
+                is_verified=True,
+            )
 
 class UserNotificationPreferenceSerializer(serializers.ModelSerializer):
     class Meta:
