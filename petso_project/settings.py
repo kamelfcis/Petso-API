@@ -283,3 +283,34 @@ JAZZMIN_UI_TWEAKS = {
     "sidebar_nav_flat_style": False,
     "theme": "default",
 }
+
+# Optional: faster password hashing for demo / small VPS (signup does PBKDF2 on every register).
+# Default Django PBKDF2 uses 720k iterations — can add seconds on a slow CPU.
+# Set PETSO_FAST_PASSWORD_HASHING=1 only if you accept weaker hashing than production norms.
+_fast_pw = os.environ.get("PETSO_FAST_PASSWORD_HASHING", "").strip().lower() in ("1", "true", "yes")
+if _fast_pw:
+    PASSWORD_HASHERS = [
+        "petso_project.hashers.PetsoDemoPBKDF2PasswordHasher",
+        "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+        "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+        "django.contrib.auth.hashers.Argon2PasswordHasher",
+        "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
+        "django.contrib.auth.hashers.ScryptPasswordHasher",
+    ]
+
+
+def _configure_sqlite_pragmas(sender, connection, **kwargs):
+    if connection.vendor != "sqlite":
+        return
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("PRAGMA journal_mode=WAL;")
+            cursor.execute("PRAGMA synchronous=NORMAL;")
+            cursor.execute("PRAGMA busy_timeout=8000;")
+    except Exception:
+        pass
+
+
+from django.db.backends.signals import connection_created  # noqa: E402
+
+connection_created.connect(_configure_sqlite_pragmas)

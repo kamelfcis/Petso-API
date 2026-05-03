@@ -106,6 +106,7 @@ deployment/
 
 ملاحظات:
 
+- إذا كان التسجيل بطيئًا على VPS ضعيف: عيّن في `.env` القيمة `PETSO_FAST_PASSWORD_HASHING=1` (تقليل تكرار PBKDF2 — **للتجارب فقط**، ليس أمان إنتاج كامل ضد هجمات قوية). المشروع يفعّل أيضًا **SQLite WAL** تلقائيًا لتسريع الكتابة على Windows.
 - `/api/auth/login/` لا يحتاج CSRF عند استخدام JWT JSON request.
 - تسجيل الدخول للـ admin panel (`/admin/`) يحتاج CSRF + Cookies بشكل صحيح.
 
