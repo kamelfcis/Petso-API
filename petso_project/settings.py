@@ -14,7 +14,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 def _load_dotenv(base: Path) -> None:
-    """Load `.env` without django-environ 'Invalid line' noise on blank/whitespace-only rows."""
+    """
+    Load `.env` into os.environ without django-environ read_env (avoids 'Invalid line' on
+    blank/whitespace-only rows and other picky parses). Uses setdefault so real env wins.
+    """
     path = base / '.env'
     if not path.is_file():
         return
@@ -22,19 +25,22 @@ def _load_dotenv(base: Path) -> None:
         text = path.read_text(encoding='utf-8', errors='replace')
     except OSError:
         return
-    lines = [ln for ln in text.splitlines(True) if ln.strip()]
-    if not lines:
-        return
-    fd, tmp = tempfile.mkstemp(prefix='petso_', suffix='.env', text=True)
-    try:
-        with os.fdopen(fd, 'w', encoding='utf-8') as wf:
-            wf.writelines(lines)
-        environ.Env.read_env(tmp, overwrite=False)
-    finally:
-        try:
-            os.unlink(tmp)
-        except OSError:
-            pass
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith('#'):
+            continue
+        if line.lower().startswith('export '):
+            line = line[7:].strip()
+        idx = line.find('=')
+        if idx <= 0:
+            continue
+        key = line[:idx].strip()
+        val = line[idx + 1 :].strip()
+        if not key:
+            continue
+        if len(val) >= 2 and val[0] == val[-1] and val[0] in ('"', "'"):
+            val = val[1:-1]
+        os.environ.setdefault(key, val)
 
 
 # Vercel serverless: deploy filesystem is read-only except temp dir.
