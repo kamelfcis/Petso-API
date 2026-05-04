@@ -46,6 +46,43 @@ def req(name, method, path, body=None, auth="bearer", desc="", tests=None, omit_
     return r
 
 
+def req_formdata(name, method, path, form_fields, auth="bearer", desc="", tests=None):
+    """Postman body mode formdata — use for file uploads (no Content-Type header)."""
+    formdata = []
+    for f in form_fields:
+        entry = {"key": f["key"], "type": f["type"]}
+        if f.get("disabled"):
+            entry["disabled"] = True
+        if f["type"] == "text":
+            entry["value"] = f.get("value", "")
+        elif f["type"] == "file":
+            entry["src"] = f.get("src", [])
+        else:
+            raise ValueError("form field type must be text or file")
+        formdata.append(entry)
+    r = {
+        "name": name,
+        "request": {
+            "method": method,
+            "header": [],
+            "url": "{{base_url}}/api" + path,
+            "body": {"mode": "formdata", "formdata": formdata},
+        },
+    }
+    if desc:
+        r["request"]["description"] = desc
+    if auth == "noauth":
+        r["request"]["auth"] = {"type": "noauth"}
+    elif auth == "bearer":
+        r["request"]["auth"] = {
+            "type": "bearer",
+            "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}],
+        }
+    if tests:
+        r["event"] = [{"listen": "test", "script": {"exec": tests, "type": "text/javascript"}}]
+    return r
+
+
 def folder(name, items, desc=""):
     f = {"name": name, "item": items}
     if desc:
@@ -562,8 +599,29 @@ def append_shared_api_folders(items):
 
     soc_items = [
         req("List posts", "GET", "/social/posts/", None),
+        req_formdata(
+            "Create post (multipart file)",
+            "POST",
+            "/social/posts/",
+            [
+                {"key": "content", "type": "text", "value": "Great harvest this week!"},
+                {"key": "image", "type": "file"},
+            ],
+            desc=(
+                "Upload a photo as a file: Body must be **form-data** (not raw JSON). "
+                "Fields: `content` (Text), `image` (File — choose PNG/JPEG/WebP). "
+                "Leave headers empty; Postman sets `multipart/form-data` with a boundary. "
+                "On VPS, nginx needs `client_max_body_size` (e.g. 10m) inside `location /api/`."
+            ),
+            tests=[
+                "if (pm.response.code === 201) {",
+                "  var j = pm.response.json();",
+                '  if (j.id) pm.collectionVariables.set("post_id", String(j.id));',
+                "}",
+            ],
+        ),
         req(
-            "Create post",
+            "Create post (JSON + remote image URL)",
             "POST",
             "/social/posts/",
             {
@@ -571,10 +629,8 @@ def append_shared_api_folders(items):
                 "remote_image_url": "https://placehold.co/600x400/png",
             },
             desc=(
-                "JSON: optional remote_image_url (or legacy image_url as https URL) downloads & saves under MEDIA. "
-                "Multipart: Body form-data, key `image` (File) + `content` (Text). "
-                "Do not add a manual Content-Type header for form-data (Postman sets multipart boundary). "
-                "GET returns absolute image_url for stored files."
+                "JSON body: optional `remote_image_url` or legacy https `image_url` — server downloads the file. "
+                "For uploading **your own file**, use **Create post (multipart file)** instead."
             ),
             tests=[
                 "if (pm.response.code === 201) {",
@@ -593,8 +649,7 @@ def append_shared_api_folders(items):
                 "image_base64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
             },
             desc=(
-                "Fallback when multipart uploads fail: JSON body with `image_base64` "
-                "(data URL or raw base64). Max 5 MB decoded. See also Create post (multipart)."
+                "Optional fallback only if multipart is blocked. Prefer **Create post (multipart file)**."
             ),
             tests=[
                 "if (pm.response.code === 201) {",

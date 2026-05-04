@@ -1281,12 +1281,60 @@
           }
         },
         {
-          "name": "Create post",
+          "name": "Create post (multipart file)",
           "request": {
             "method": "POST",
             "header": [],
             "url": "{{base_url}}/api/social/posts/",
-            "description": "JSON: optional remote_image_url (or legacy image_url as https URL) downloads & saves under MEDIA. Multipart: Body form-data, key `image` (File) + `content` (Text). Do not add a manual Content-Type header for form-data (Postman sets multipart boundary). GET returns absolute image_url for stored files.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "content",
+                  "type": "text",
+                  "value": "Great harvest this week!"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "description": "Upload a photo as a file: Body must be **form-data** (not raw JSON). Fields: `content` (Text), `image` (File — choose PNG/JPEG/WebP). Leave headers empty; Postman sets `multipart/form-data` with a boundary. On VPS, nginx needs `client_max_body_size` (e.g. 10m) inside `location /api/`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"post_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create post (JSON + remote image URL)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/social/posts/",
+            "description": "JSON body: optional `remote_image_url` or legacy https `image_url` — server downloads the file. For uploading **your own file**, use **Create post (multipart file)** instead.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"content\": \"Great harvest this week!\",\n  \"remote_image_url\": \"https://placehold.co/600x400/png\"\n}",
@@ -1328,7 +1376,7 @@
             "method": "POST",
             "header": [],
             "url": "{{base_url}}/api/social/posts/",
-            "description": "Fallback when multipart uploads fail: JSON body with `image_base64` (data URL or raw base64). Max 5 MB decoded. See also Create post (multipart).",
+            "description": "Optional fallback only if multipart is blocked. Prefer **Create post (multipart file)**.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"content\": \"1x1 PNG via image_base64\",\n  \"image_base64\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==\"\n}",

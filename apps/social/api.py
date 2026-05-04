@@ -40,7 +40,7 @@ class PostSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False,
         allow_blank=True,
-        help_text="Optional. PNG/JPEG/WebP/GIF as data URL or raw base64 when multipart is unreliable.",
+        help_text="Optional fallback when multipart file upload is unavailable (data URL or raw base64). Prefer field `image` with multipart/form-data.",
     )
 
     class Meta:
