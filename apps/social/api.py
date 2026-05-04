@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers, viewsets, permissions, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -61,14 +62,33 @@ class PostSerializer(serializers.ModelSerializer):
 
     def get_image_url(self, obj):
         request = self.context.get("request")
-        if obj.image:
-            path = obj.image.url
+        public = getattr(settings, "PETSO_PUBLIC_BASE_URL", "").strip().rstrip("/")
+
+        def finalize(path_or_url):
+            if not path_or_url:
+                return None
+            s = str(path_or_url).strip()
+            if s.startswith(("http://", "https://")):
+                return s
+            rel = s if s.startswith("/") else f"/{s}"
+            if public:
+                return f"{public}{rel}"
             if request:
-                return request.build_absolute_uri(path)
-            return path
+                return request.build_absolute_uri(rel)
+            return rel
+
+        if obj.image:
+            return finalize(obj.image.url)
         if obj.image_url:
-            return str(obj.image_url)
+            return finalize(obj.image_url)
         return None
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        url = self.get_image_url(instance)
+        data["image_url"] = url
+        data["image"] = url
+        return data
 
     def get_likes_count(self, obj):
         return obj.likes.count()

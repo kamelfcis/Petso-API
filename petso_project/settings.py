@@ -32,6 +32,9 @@ CSRF_TRUSTED_ORIGINS = [s.strip() for s in _csrf_origins.split(',') if s.strip()
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+# Behind nginx/Caddy: trust X-Forwarded-Host so absolute URLs (e.g. media in JSON) use the public host.
+USE_X_FORWARDED_HOST = env.bool('USE_X_FORWARDED_HOST', default=not DEBUG)
+
 # Application definition
 INSTALLED_APPS = [
     # Jazzmin must be before admin
@@ -197,6 +200,9 @@ MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Serve uploaded files from Django (Waitress/VPS). Set False if nginx serves /media/.
 SERVE_MEDIA_FROM_DJANGO = env.bool('SERVE_MEDIA_FROM_DJANGO', default=True)
+# Optional: public API base URL without trailing slash (e.g. https://api.example.com). Forces correct
+# image/image_url in JSON when the app sits behind a reverse proxy and Host headers differ.
+PETSO_PUBLIC_BASE_URL = env('PETSO_PUBLIC_BASE_URL', default='').strip().rstrip('/')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
