@@ -94,6 +94,31 @@ class PostSerializer(serializers.ModelSerializer):
         return obj.likes.count()
 
     def validate(self, attrs):
+        request = self.context.get("request")
+        if request and request.method in ("POST", "PUT", "PATCH"):
+            ct = (request.content_type or request.META.get("CONTENT_TYPE", "") or "").lower()
+            if "multipart/form-data" in ct:
+                f = request.FILES.get("image")
+                if "image" in request.POST and not f:
+                    raise ValidationError(
+                        {
+                            "image": (
+                                "No binary file was received for 'image'. "
+                                "In Postman set the row type to **File** (not Text), click **Select Files**, "
+                                "and fix the yellow warning (broken path). "
+                                "Or send JSON with remote_image_url / image_base64."
+                            )
+                        }
+                    )
+                if f is not None and getattr(f, "size", 0) == 0:
+                    raise ValidationError(
+                        {
+                            "image": (
+                                "The uploaded file is empty. Re-select a valid image file in Postman."
+                            )
+                        }
+                    )
+
         image = attrs.get("image")
         b64 = attrs.get("image_base64")
         if isinstance(b64, str):

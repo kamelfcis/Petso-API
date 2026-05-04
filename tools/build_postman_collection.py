@@ -608,10 +608,10 @@ def append_shared_api_folders(items):
                 {"key": "image", "type": "file"},
             ],
             desc=(
-                "Upload a photo as a file: Body must be **form-data** (not raw JSON). "
-                "Fields: `content` (Text), `image` (File — choose PNG/JPEG/WebP). "
-                "Leave headers empty; Postman sets `multipart/form-data` with a boundary. "
-                "On VPS, nginx needs `client_max_body_size` (e.g. 10m) inside `location /api/`."
+                "Upload a photo as a file: Body **form-data**. "
+                "`content` = **Text**; `image` = **File** (not Text — click **Select Files**). "
+                "If Postman shows a **yellow warning** on the filename, the path is broken: re-pick the file from disk. "
+                "Leave headers empty. On VPS, nginx: `client_max_body_size 10m;` for `/api/`."
             ),
             tests=[
                 "if (pm.response.code === 201) {",
