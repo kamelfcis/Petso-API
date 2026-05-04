@@ -24,6 +24,7 @@ SECRET_KEY = env('SECRET_KEY', default='django-insecure-2p^rifo*lyfh=%p5q(r#w%3h
 DEBUG = env('DEBUG', default=True)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
+# Production: set in `.env`, e.g. ALLOWED_HOSTS=95.216.63.81,localhost,127.0.0.1 — see `.env.example` (VPS block).
 
 # Comma-separated, e.g. https://petso-api.vercel.app (needed for admin/forms behind HTTPS proxy)
 _csrf_origins = env('CSRF_TRUSTED_ORIGINS', default='')
