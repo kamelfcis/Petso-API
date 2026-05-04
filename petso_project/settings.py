@@ -12,12 +12,37 @@ env = environ.Env(
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+def _load_dotenv(base: Path) -> None:
+    """Load `.env` without django-environ 'Invalid line' noise on blank/whitespace-only rows."""
+    path = base / '.env'
+    if not path.is_file():
+        return
+    try:
+        text = path.read_text(encoding='utf-8', errors='replace')
+    except OSError:
+        return
+    lines = [ln for ln in text.splitlines(True) if ln.strip()]
+    if not lines:
+        return
+    fd, tmp = tempfile.mkstemp(prefix='petso_', suffix='.env', text=True)
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as wf:
+            wf.writelines(lines)
+        environ.Env.read_env(tmp, overwrite=False)
+    finally:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+
+
 # Vercel serverless: deploy filesystem is read-only except temp dir.
 # VERCEL_ENV is always set on Vercel (production | preview | development); VERCEL=1 is also common.
 IS_VERCEL = bool(os.environ.get('VERCEL_ENV')) or os.environ.get('VERCEL', '').lower() in ('1', 'true')
 
-# Read .env file
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+# Read .env file (blank lines / whitespace-only lines are skipped)
+_load_dotenv(BASE_DIR)
 
 # Quick-start development settings - unsuitable for production
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-2p^rifo*lyfh=%p5q(r#w%3h61+cv@^z-c!q++b_8bl8p2tz^y')
@@ -177,10 +202,18 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
-# Simple JWT
+# Simple JWT (SIGNING_KEY stretched so short SECRET_KEY does not trigger PyJWT InsecureKeyLengthWarning)
+def _jwt_signing_key(secret: str) -> str:
+    s = secret
+    while len(s.encode('utf-8')) < 32:
+        s += '!'
+    return s
+
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'SIGNING_KEY': _jwt_signing_key(SECRET_KEY),
 }
 
 # CORS
@@ -204,6 +237,12 @@ SERVE_MEDIA_FROM_DJANGO = env.bool('SERVE_MEDIA_FROM_DJANGO', default=True)
 # Optional: public API base URL without trailing slash (e.g. https://api.example.com). Forces correct
 # image/image_url in JSON when the app sits behind a reverse proxy and Host headers differ.
 PETSO_PUBLIC_BASE_URL = env('PETSO_PUBLIC_BASE_URL', default='').strip().rstrip('/')
+
+# Multipart / file uploads (raise if nginx body limit is higher than this)
+PETSO_MAX_UPLOAD_MB = max(int(env('PETSO_MAX_UPLOAD_MB', default='32') or 32), 3)
+_max_upload_bytes = PETSO_MAX_UPLOAD_MB * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = _max_upload_bytes
+FILE_UPLOAD_MAX_MEMORY_SIZE = _max_upload_bytes
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

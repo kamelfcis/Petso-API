@@ -236,13 +236,24 @@ class PostViewSet(viewsets.ModelViewSet):
             return None
         return f
 
+    @staticmethod
+    def _truthy_optional_str(value):
+        """Multipart clients often send empty optional fields as '' or whitespace — must not skip file inject."""
+        if value is None:
+            return False
+        if isinstance(value, str):
+            return bool(value.strip())
+        return bool(value)
+
     def perform_create(self, serializer):
         """
         If multipart dropped `image` from validated_data (proxy/parser quirks),
         attach the raw uploaded file from request.FILES when present.
         """
         vd = serializer.validated_data
-        if vd.get("remote_image_url") or vd.get("image_base64"):
+        if self._truthy_optional_str(vd.get("remote_image_url")) or self._truthy_optional_str(
+            vd.get("image_base64")
+        ):
             serializer.save(user=self.request.user)
             return
         raw = self._file_image_from_request()
@@ -253,7 +264,9 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         vd = serializer.validated_data
-        if vd.get("remote_image_url") or vd.get("image_base64"):
+        if self._truthy_optional_str(vd.get("remote_image_url")) or self._truthy_optional_str(
+            vd.get("image_base64")
+        ):
             serializer.save()
             return
         raw = self._file_image_from_request()
