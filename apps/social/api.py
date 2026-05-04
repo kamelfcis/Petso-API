@@ -6,6 +6,19 @@ from petso_project.image_utils import download_url_to_content_file
 from .models import Post, Comment, PostLike
 
 
+def _http_url_from_initial_image_url(initial_data):
+    """POST bodies often use legacy key `image_url` for a remote picture URL."""
+    if not isinstance(initial_data, dict):
+        return None
+    raw = initial_data.get("image_url")
+    if not isinstance(raw, str):
+        return None
+    s = raw.strip()
+    if not s.lower().startswith(("http://", "https://")):
+        return None
+    return s
+
+
 class PostSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
     likes_count = serializers.SerializerMethodField(read_only=True)
@@ -51,22 +64,34 @@ class PostSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         image = attrs.get("image")
         remote = attrs.get("remote_image_url")
+        if isinstance(remote, str):
+            remote = remote.strip() or None
+            attrs["remote_image_url"] = remote
+        if not remote:
+            legacy = _http_url_from_initial_image_url(getattr(self, "initial_data", None))
+            if legacy:
+                attrs["remote_image_url"] = legacy
+                remote = legacy
         if image and remote:
             raise ValidationError("Provide either an uploaded image file or remote_image_url, not both.")
         return attrs
 
     def create(self, validated_data):
         remote = validated_data.pop("remote_image_url", None)
+        if isinstance(remote, str):
+            remote = remote.strip() or None
         if remote:
             validated_data["image"] = download_url_to_content_file(remote)
-            validated_data["image_url"] = remote.strip()
+            validated_data["image_url"] = remote
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         remote = validated_data.pop("remote_image_url", None)
+        if isinstance(remote, str):
+            remote = remote.strip() or None
         if remote:
             validated_data["image"] = download_url_to_content_file(remote)
-            validated_data["image_url"] = remote.strip()
+            validated_data["image_url"] = remote
         return super().update(instance, validated_data)
 
 
