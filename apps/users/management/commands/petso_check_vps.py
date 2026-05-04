@@ -18,7 +18,7 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(
                     self.style.ERROR(
-                        "MEDIA_ROOT is NOT writable — fix ownership (e.g. chown www-data) or permissions."
+                        "MEDIA_ROOT is NOT writable - fix ownership (e.g. chown www-data) or permissions."
                     )
                 )
         else:
