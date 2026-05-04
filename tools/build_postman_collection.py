@@ -541,7 +541,15 @@ def append_shared_api_folders(items):
             "Create post",
             "POST",
             "/social/posts/",
-            {"content": "Great harvest this week!", "image_url": "https://placehold.co/600x400/png"},
+            {
+                "content": "Great harvest this week!",
+                "remote_image_url": "https://placehold.co/600x400/png",
+            },
+            desc=(
+                "JSON: optional remote_image_url downloads & saves under MEDIA. "
+                "Multipart: send field `image` (file) instead. "
+                "GET returns absolute image_url for stored files."
+            ),
             tests=[
                 "if (pm.response.code === 201) {",
                 "  var j = pm.response.json();",

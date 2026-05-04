@@ -4,6 +4,9 @@ from django.conf import settings
 class Post(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='posts')
     content = models.TextField()
+    # Uploaded file (preferred). Served under MEDIA_URL.
+    image = models.ImageField(upload_to="social/posts/", blank=True, null=True)
+    # Legacy / optional external-only link when no file is stored.
     image_url = models.URLField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

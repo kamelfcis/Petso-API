@@ -195,6 +195,8 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Serve uploaded files from Django (Waitress/VPS). Set False if nginx serves /media/.
+SERVE_MEDIA_FROM_DJANGO = env.bool('SERVE_MEDIA_FROM_DJANGO', default=True)
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

@@ -1223,9 +1223,10 @@
               }
             ],
             "url": "{{base_url}}/api/social/posts/",
+            "description": "JSON: optional remote_image_url downloads & saves under MEDIA. Multipart: send field `image` (file) instead. GET returns absolute image_url for stored files.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"content\": \"Great harvest this week!\",\n  \"image_url\": \"https://placehold.co/600x400/png\"\n}",
+              "raw": "{\n  \"content\": \"Great harvest this week!\",\n  \"remote_image_url\": \"https://placehold.co/600x400/png\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
