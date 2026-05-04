@@ -81,7 +81,10 @@ INSTALLED_APPS = [
     'channels',
     'django_cleanup.apps.CleanupConfig',
     'drf_spectacular',
-    
+
+    # Project-level management commands (petso_check_vps) — always part of this repo
+    'petso_project.apps.PetsoProjectConfig',
+
     # Internal apps
     'apps.users',
     'apps.farmers',
