@@ -148,11 +148,17 @@ class PostViewSet(viewsets.ModelViewSet):
     @staticmethod
     def _write_request_data(request):
         """
-        Prefer Django's parsed POST+FILES for multipart so file uploads survive
-        Content-Type / parser edge cases in front of ASGI or proxies.
+        Prefer Django's parsed POST+FILES when any file was uploaded so the
+        serializer sees the same keys as a Django form. Accessing POST first
+        ensures multipart bodies are fully parsed on some servers (ASGI/nginx).
         """
-        ct = (request.content_type or request.META.get("CONTENT_TYPE", "") or "").lower()
-        if "multipart/form-data" in ct and (request.POST or request.FILES):
+        method = getattr(request, "method", "") or ""
+        if method in ("POST", "PUT", "PATCH"):
+            try:
+                _ = request.POST  # noqa: F841  # triggers multipart parse + FILES
+            except Exception:
+                pass
+        if request.FILES:
             data = request.POST.copy()
             for key, filelist in request.FILES.lists():
                 data.setlist(key, filelist)
@@ -176,8 +182,40 @@ class PostViewSet(viewsets.ModelViewSet):
         self.perform_update(serializer)
         return Response(serializer.data)
 
+    def _file_image_from_request(self):
+        f = self.request.FILES.get("image")
+        if f is None:
+            return None
+        size = getattr(f, "size", None)
+        if size is not None and size <= 0:
+            return None
+        return f
+
     def perform_create(self, serializer):
+        """
+        If multipart dropped `image` from validated_data (proxy/parser quirks),
+        attach the raw uploaded file from request.FILES when present.
+        """
+        vd = serializer.validated_data
+        if vd.get("remote_image_url") or vd.get("image_base64"):
+            serializer.save(user=self.request.user)
+            return
+        raw = self._file_image_from_request()
+        if raw is not None:
+            serializer.save(user=self.request.user, image=raw)
+            return
         serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        vd = serializer.validated_data
+        if vd.get("remote_image_url") or vd.get("image_base64"):
+            serializer.save()
+            return
+        raw = self._file_image_from_request()
+        if raw is not None:
+            serializer.save(image=raw)
+            return
+        serializer.save()
 
 
 class CommentViewSet(viewsets.ModelViewSet):
