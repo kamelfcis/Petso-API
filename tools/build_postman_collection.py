@@ -449,14 +449,30 @@ def append_shared_api_folders(items):
                 "stock": 200,
                 "is_active": True,
                 "requires_prescription": False,
+                "images_data": [
+                    {
+                        "remote_image_url": "https://placehold.co/200x200/png",
+                        "alt_text": "Main",
+                        "position": 0,
+                    }
+                ],
             },
-            desc="company_profile_id = Company model PK.",
+            desc=(
+                "company_profile_id = Company PK. Optional images_data: remote_image_url is downloaded to MEDIA. "
+                "Or POST /ecommerce/product-images/ with multipart `image` + `product`."
+            ),
             tests=[
                 "if (pm.response.code === 201) {",
                 "  var j = pm.response.json();",
                 '  if (j.id) pm.collectionVariables.set("product_id", String(j.id));',
                 "}",
             ],
+        ),
+        req(
+            "List product images",
+            "GET",
+            "/ecommerce/product-images/?product={{product_id}}",
+            None,
         ),
         req("List my cart", "GET", "/ecommerce/cart/", None),
         req(
@@ -471,7 +487,7 @@ def append_shared_api_folders(items):
         folder(
             "05 - E-commerce",
             ecom_items,
-            "Typical order: Login Company → Create company profile → Create category → Create product. "
+            "Typical order: Login Company → Create company profile → Create category → Create product (images_data or product-images). "
             "Then Login Farmer → Cart add_item.",
         )
     )

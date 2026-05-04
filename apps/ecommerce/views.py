@@ -1,20 +1,42 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Category, Product, ProductImage, ProductReview, Discount, Cart, CartItem
-from .serializers import CategorySerializer, ProductSerializer, ProductImageSerializer, ProductReviewSerializer, DiscountSerializer, CartSerializer, CartItemSerializer
+
+from .models import Category, Product, ProductImage, Cart, CartItem
+from .serializers import (
+    CategorySerializer,
+    ProductSerializer,
+    ProductImageSerializer,
+    CartSerializer,
+    CartItemSerializer,
+)
+
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
+
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.select_related('category', 'company').prefetch_related('images', 'reviews').filter(is_active=True)
+    queryset = Product.objects.select_related("category", "company").prefetch_related("images", "reviews")
     serializer_class = ProductSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-    filterset_fields = ['category', 'company', 'requires_prescription']
-    search_fields = ['name', 'description', 'sku']
+    filterset_fields = ["category", "company", "requires_prescription", "is_active"]
+    search_fields = ["name", "description", "sku"]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.action == "list" and "is_active" not in self.request.query_params:
+            qs = qs.filter(is_active=True)
+        return qs
+
+
+class ProductImageViewSet(viewsets.ModelViewSet):
+    queryset = ProductImage.objects.select_related("product").all().order_by("product", "position", "id")
+    serializer_class = ProductImageSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    filterset_fields = ["product"]
 
 class CartViewSet(viewsets.ModelViewSet):
     queryset = Cart.objects.all()

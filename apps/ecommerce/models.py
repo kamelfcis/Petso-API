@@ -43,7 +43,9 @@ class Product(models.Model):
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    image_url = models.URLField() # Or FileField(upload_to='products/')
+    image = models.ImageField(upload_to="ecommerce/products/", blank=True, null=True)
+    # Original remote URL (optional) or legacy link when no file is stored
+    image_url = models.URLField(blank=True, null=True)
     alt_text = models.CharField(max_length=255, blank=True, null=True)
     position = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)

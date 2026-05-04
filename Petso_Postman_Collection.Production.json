@@ -930,10 +930,10 @@
               }
             ],
             "url": "{{base_url}}/api/ecommerce/products/",
-            "description": "company_profile_id = Company model PK.",
+            "description": "company_profile_id = Company PK. Optional images_data: remote_image_url is downloaded to MEDIA. Or POST /ecommerce/product-images/ with multipart `image` + `product`.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"company\": \"{{company_profile_id}}\",\n  \"category\": \"{{category_id}}\",\n  \"sku\": \"SKU-{{$timestamp}}\",\n  \"name\": \"Starter Feed 25kg\",\n  \"description\": \"High protein starter for broilers\",\n  \"unit_price\": \"450.00\",\n  \"currency\": \"EGP\",\n  \"stock\": 200,\n  \"is_active\": true,\n  \"requires_prescription\": false\n}",
+              "raw": "{\n  \"company\": \"{{company_profile_id}}\",\n  \"category\": \"{{category_id}}\",\n  \"sku\": \"SKU-{{$timestamp}}\",\n  \"name\": \"Starter Feed 25kg\",\n  \"description\": \"High protein starter for broilers\",\n  \"unit_price\": \"450.00\",\n  \"currency\": \"EGP\",\n  \"stock\": 200,\n  \"is_active\": true,\n  \"requires_prescription\": false,\n  \"images_data\": [\n    {\n      \"remote_image_url\": \"https://placehold.co/200x200/png\",\n      \"alt_text\": \"Main\",\n      \"position\": 0\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -965,6 +965,24 @@
               }
             }
           ]
+        },
+        {
+          "name": "List product images",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/ecommerce/product-images/?product={{product_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
         },
         {
           "name": "List my cart",
@@ -1018,7 +1036,7 @@
           }
         }
       ],
-      "description": "Typical order: Login Company → Create company profile → Create category → Create product. Then Login Farmer → Cart add_item."
+      "description": "Typical order: Login Company → Create company profile → Create category → Create product (images_data or product-images). Then Login Farmer → Cart add_item."
     },
     {
       "name": "06 - Orders",
