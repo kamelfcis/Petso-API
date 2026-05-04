@@ -8,9 +8,12 @@ from .models import Post, Comment, PostLike
 
 def _http_url_from_initial_image_url(initial_data):
     """POST bodies often use legacy key `image_url` for a remote picture URL."""
-    if not isinstance(initial_data, dict):
+    if initial_data is None:
         return None
-    raw = initial_data.get("image_url")
+    if hasattr(initial_data, "get"):
+        raw = initial_data.get("image_url")
+    else:
+        return None
     if not isinstance(raw, str):
         return None
     s = raw.strip()

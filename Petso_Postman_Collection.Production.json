@@ -1284,14 +1284,9 @@
           "name": "Create post",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "url": "{{base_url}}/api/social/posts/",
-            "description": "JSON: optional remote_image_url downloads & saves under MEDIA. Multipart: send field `image` (file) instead. GET returns absolute image_url for stored files.",
+            "description": "JSON: optional remote_image_url (or legacy image_url as https URL) downloads & saves under MEDIA. Multipart: Body form-data, key `image` (File) + `content` (Text). Do not add a manual Content-Type header for form-data (Postman sets multipart boundary). GET returns absolute image_url for stored files.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"content\": \"Great harvest this week!\",\n  \"remote_image_url\": \"https://placehold.co/600x400/png\"\n}",

@@ -8,12 +8,21 @@ import json
 from pathlib import Path
 
 
-def req(name, method, path, body=None, auth="bearer", desc="", tests=None):
+def req(name, method, path, body=None, auth="bearer", desc="", tests=None, omit_json_content_type=False):
+    """If omit_json_content_type is True, no Content-Type header is set so Postman can send
+    multipart/form-data with a boundary when the user switches Body to form-data. A fixed
+    application/json header breaks file uploads."""
+    if body is None:
+        headers = []
+    elif omit_json_content_type:
+        headers = []
+    else:
+        headers = [{"key": "Content-Type", "value": "application/json"}]
     r = {
         "name": name,
         "request": {
             "method": method,
-            "header": [{"key": "Content-Type", "value": "application/json"}] if body else [],
+            "header": headers,
             "url": "{{base_url}}/api" + path,
         },
     }
@@ -562,8 +571,9 @@ def append_shared_api_folders(items):
                 "remote_image_url": "https://placehold.co/600x400/png",
             },
             desc=(
-                "JSON: optional remote_image_url downloads & saves under MEDIA. "
-                "Multipart: send field `image` (file) instead. "
+                "JSON: optional remote_image_url (or legacy image_url as https URL) downloads & saves under MEDIA. "
+                "Multipart: Body form-data, key `image` (File) + `content` (Text). "
+                "Do not add a manual Content-Type header for form-data (Postman sets multipart boundary). "
                 "GET returns absolute image_url for stored files."
             ),
             tests=[
@@ -572,6 +582,7 @@ def append_shared_api_folders(items):
                 '  if (j.id) pm.collectionVariables.set("post_id", String(j.id));',
                 "}",
             ],
+            omit_json_content_type=True,
         ),
         req("List comments", "GET", "/social/comments/", None),
         req(
