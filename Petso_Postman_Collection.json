@@ -1273,6 +1273,48 @@
           ]
         },
         {
+          "name": "Create post (image base64 JSON)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/social/posts/",
+            "description": "Fallback when multipart uploads fail: JSON body with `image_base64` (data URL or raw base64). Max 5 MB decoded. See also Create post (multipart).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"1x1 PNG via image_base64\",\n  \"image_base64\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"post_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
           "name": "List comments",
           "request": {
             "method": "GET",

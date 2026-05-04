@@ -584,6 +584,26 @@ def append_shared_api_folders(items):
             ],
             omit_json_content_type=True,
         ),
+        req(
+            "Create post (image base64 JSON)",
+            "POST",
+            "/social/posts/",
+            {
+                "content": "1x1 PNG via image_base64",
+                "image_base64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+            },
+            desc=(
+                "Fallback when multipart uploads fail: JSON body with `image_base64` "
+                "(data URL or raw base64). Max 5 MB decoded. See also Create post (multipart)."
+            ),
+            tests=[
+                "if (pm.response.code === 201) {",
+                "  var j = pm.response.json();",
+                '  if (j.id) pm.collectionVariables.set("post_id", String(j.id));',
+                "}",
+            ],
+            omit_json_content_type=True,
+        ),
         req("List comments", "GET", "/social/comments/", None),
         req(
             "Create comment",
