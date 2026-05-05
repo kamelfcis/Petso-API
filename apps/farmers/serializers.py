@@ -9,6 +9,11 @@ class FarmerProfileSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class PoultryFlockSerializer(serializers.ModelSerializer):
+    """`farmer` is optional for farmers: the view sets it from the JWT user."""
+
     class Meta:
         model = PoultryFlock
-        fields = '__all__'
+        fields = "__all__"
+        extra_kwargs = {
+            "farmer": {"required": False, "allow_null": True},
+        }

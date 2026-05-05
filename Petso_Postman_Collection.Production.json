@@ -136,7 +136,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/api/docs/",
-            "description": "**Production (Vercel)** — المتغير `base_url` الافتراضي: `https://petso-api.vercel.app`\n1. التسجيل يفعّل الحساب مباشرة (`is_verified`) — لا يوجد verify-email / OTP.\n2. سجّل الدخول أو أنشئ حسابًا ثم تابع المجلدات.\n3. حساب الـ demo المضمّن مع SQLite: `admin_email` / `admin_password` (انظر `deployment/README.md`) — نفسها لـ `/admin/`.\n4. حدّث `category_id`, `product_id`, … من ردود الطلبات.\n\n**Variables:** base_url, admin_*, role emails/passwords, tokens, *_id"
+            "description": "**Production (Vercel)** — المتغير `base_url` الافتراضي: `https://petso-api.vercel.app`\n1. التسجيل يفعّل الحساب مباشرة (`is_verified`) — لا يوجد verify-email / OTP.\n2. سجّل الدخول أو أنشئ حسابًا ثم تابع المجلدات.\n3. حساب الـ demo المضمّن مع SQLite: `admin_email` / `admin_password` (انظر `deployment/README.md`) — نفسها لـ `/admin/`.\n4. حدّث `category_id`, `product_id`, … من ردود الطلبات.\n5. حذف جماعي (staff): `DELETE .../ecommerce/products/delete-all/` و `.../categories/delete-all/` — يحتاج مستخدم **`is_staff`** (مثلاً تسجيل دخول Admin المضمّن أو superuser).\n\n**Variables:** base_url, admin_*, role emails/passwords, tokens, *_id"
           }
         }
       ]
@@ -550,6 +550,7 @@
               }
             ],
             "url": "{{base_url}}/api/farmers/flocks/",
+            "description": "As **farmer**, omit `farmer` — the server assigns your profile from the JWT. As **admin**, include `farmer` (FarmerProfile PK). Run **Create farmer profile** first if new user.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"flock_name\": \"Batch A-2026\",\n  \"breed\": \"Ross 308\",\n  \"hatch_date\": \"2026-01-15\",\n  \"current_age_weeks\": 8,\n  \"total_count\": 5000,\n  \"mortality_count\": 12,\n  \"feed_consumption\": \"120 kg/day\",\n  \"notes\": \"Healthy flock\"\n}",
@@ -920,6 +921,78 @@
           }
         },
         {
+          "name": "Bulk delete — staff JWT",
+          "item": [
+            {
+              "name": "Delete all products",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/ecommerce/products/delete-all/",
+                "description": "**DRF `IsAdminUser`** — Django user must have **`is_staff=True`**. Use **Login - Admin (bundled Vercel demo)** on production, or locally run `python manage.py createsuperuser` and **Login** with that email — API Register with `role=admin` does **not** set `is_staff`.\n\n`DELETE {{base_url}}/api/ecommerce/products/delete-all/` — removes every product; images, reviews, cart line items CASCADE. Categories unchanged.\n\nResponse: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all products: deleted count =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete all categories",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/ecommerce/categories/delete-all/",
+                "description": "Same **staff JWT** as **Delete all products**.\n\n`DELETE {{base_url}}/api/ecommerce/categories/delete-all/` — removes every category; products in those categories CASCADE.\n\nResponse: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all categories: deleted count =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ],
+          "description": "Destructive admin endpoints. Bearer token must be from a **staff** user (`is_staff=True`). Order: if you only want products removed, call **Delete all products** only; deleting all categories also wipes their products."
+        },
+        {
           "name": "Create product",
           "request": {
             "method": "POST",
@@ -1078,44 +1151,6 @@
           }
         },
         {
-          "name": "Delete all products",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": "{{base_url}}/api/ecommerce/products/delete-all/",
-            "description": "**Staff only** (`is_staff`). JWT from **Login - Admin** (or any staff user). Deletes every product; related images, reviews, and cart line items CASCADE. Categories are unchanged.",
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Delete all categories",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": "{{base_url}}/api/ecommerce/categories/delete-all/",
-            "description": "**Staff only** (`is_staff`). Deletes every category; products in those categories CASCADE. If you only want products gone, use **Delete all products** first and keep categories, or only call that endpoint.",
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            }
-          }
-        },
-        {
           "name": "List my cart",
           "request": {
             "method": "GET",
@@ -1167,7 +1202,7 @@
           }
         }
       ],
-      "description": "Typical order: Login Company → Create company profile → Create category → **Create product** (form-data + `image` File), or JSON alternate / POST /ecommerce/product-images/. Then Login Farmer → Cart add_item. **Delete all products** / **Delete all categories** require staff JWT."
+      "description": "Typical order: Login Company → Create company profile → Create category → **Create product** (form-data + `image` File), or JSON alternate / POST /ecommerce/product-images/. Then Login Farmer → Cart add_item. Folder **Bulk delete — staff JWT**: `DELETE .../products/delete-all/` and `DELETE .../categories/delete-all/` (needs `is_staff`; see request descriptions)."
     },
     {
       "name": "06 - Orders",

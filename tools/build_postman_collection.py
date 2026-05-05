@@ -261,7 +261,8 @@ def readme_folder(*, production: bool):
             "1. التسجيل يفعّل الحساب مباشرة (`is_verified`) — لا يوجد verify-email / OTP.\n"
             "2. سجّل الدخول أو أنشئ حسابًا ثم تابع المجلدات.\n"
             "3. حساب الـ demo المضمّن مع SQLite: `admin_email` / `admin_password` (انظر `deployment/README.md`) — نفسها لـ `/admin/`.\n"
-            "4. حدّث `category_id`, `product_id`, … من ردود الطلبات.\n\n"
+            "4. حدّث `category_id`, `product_id`, … من ردود الطلبات.\n"
+            "5. حذف جماعي (staff): `DELETE .../ecommerce/products/delete-all/` و `.../categories/delete-all/` — يحتاج مستخدم **`is_staff`** (مثلاً تسجيل دخول Admin المضمّن أو superuser).\n\n"
             "**Variables:** base_url, admin_*, role emails/passwords, tokens, *_id"
         )
     else:
@@ -270,7 +271,10 @@ def readme_folder(*, production: bool):
             "1. Run server: `python manage.py runserver`\n"
             "2. Register users (pre-verified) → Login (same role) → follow folders\n"
             "3. Update collection variables from responses (ids)\n\n"
-            "**Variables**: base_url, emails/passwords, tokens, *_id fields."
+            "**Variables**: base_url, emails/passwords, tokens, *_id fields.\n\n"
+            "**Staff bulk delete:** `DELETE /api/ecommerce/products/delete-all/` and "
+            "`DELETE /api/ecommerce/categories/delete-all/` need a JWT for a user with "
+            "**`is_staff=True`** (use `python manage.py createsuperuser`, then login — not the same as API `role=admin` from Register)."
         )
     return {
         "name": "00 - README",
@@ -365,6 +369,10 @@ def append_shared_api_folders(items):
                 "feed_consumption": "120 kg/day",
                 "notes": "Healthy flock",
             },
+            desc=(
+                "As **farmer**, omit `farmer` — the server assigns your profile from the JWT. "
+                "As **admin**, include `farmer` (FarmerProfile PK). Run **Create farmer profile** first if new user."
+            ),
             tests=[
                 "if (pm.response.code === 201) {",
                 "  var j = pm.response.json();",
@@ -480,6 +488,55 @@ def append_shared_api_folders(items):
             ],
         ),
         req("Search products", "GET", "/ecommerce/products/?search=feed", None),
+        folder(
+            "Bulk delete — staff JWT",
+            [
+                req(
+                    "Delete all products",
+                    "DELETE",
+                    "/ecommerce/products/delete-all/",
+                    None,
+                    desc=(
+                        "**DRF `IsAdminUser`** — Django user must have **`is_staff=True`**. "
+                        "Use **Login - Admin (bundled Vercel demo)** on production, or locally run "
+                        "`python manage.py createsuperuser` and **Login** with that email — "
+                        "API Register with `role=admin` does **not** set `is_staff`.\n\n"
+                        "`DELETE {{base_url}}/api/ecommerce/products/delete-all/` — removes every product; "
+                        "images, reviews, cart line items CASCADE. Categories unchanged.\n\n"
+                        "Response: `200` `{ \"deleted\": <int> }`."
+                    ),
+                    tests=[
+                        "if (pm.response.code === 200) {",
+                        "  var j = pm.response.json();",
+                        "  console.log('Delete all products: deleted count =', j.deleted);",
+                        "}",
+                    ],
+                ),
+                req(
+                    "Delete all categories",
+                    "DELETE",
+                    "/ecommerce/categories/delete-all/",
+                    None,
+                    desc=(
+                        "Same **staff JWT** as **Delete all products**.\n\n"
+                        "`DELETE {{base_url}}/api/ecommerce/categories/delete-all/` — removes every category; "
+                        "products in those categories CASCADE.\n\n"
+                        "Response: `200` `{ \"deleted\": <int> }`."
+                    ),
+                    tests=[
+                        "if (pm.response.code === 200) {",
+                        "  var j = pm.response.json();",
+                        "  console.log('Delete all categories: deleted count =', j.deleted);",
+                        "}",
+                    ],
+                ),
+            ],
+            desc=(
+                "Destructive admin endpoints. Bearer token must be from a **staff** user (`is_staff=True`). "
+                "Order: if you only want products removed, call **Delete all products** only; "
+                "deleting all categories also wipes their products."
+            ),
+        ),
         req_formdata(
             "Create product",
             "POST",
@@ -548,27 +605,6 @@ def append_shared_api_folders(items):
             "/ecommerce/product-images/?product={{product_id}}",
             None,
         ),
-        req(
-            "Delete all products",
-            "DELETE",
-            "/ecommerce/products/delete-all/",
-            None,
-            desc=(
-                "**Staff only** (`is_staff`). JWT from **Login - Admin** (or any staff user). "
-                "Deletes every product; related images, reviews, and cart line items CASCADE. "
-                "Categories are unchanged."
-            ),
-        ),
-        req(
-            "Delete all categories",
-            "DELETE",
-            "/ecommerce/categories/delete-all/",
-            None,
-            desc=(
-                "**Staff only** (`is_staff`). Deletes every category; products in those categories CASCADE. "
-                "If you only want products gone, use **Delete all products** first and keep categories, or only call that endpoint."
-            ),
-        ),
         req("List my cart", "GET", "/ecommerce/cart/", None),
         req(
             "Cart - Add item",
@@ -584,7 +620,8 @@ def append_shared_api_folders(items):
             ecom_items,
             "Typical order: Login Company → Create company profile → Create category → **Create product** "
             "(form-data + `image` File), or JSON alternate / POST /ecommerce/product-images/. "
-            "Then Login Farmer → Cart add_item. **Delete all products** / **Delete all categories** require staff JWT.",
+            "Then Login Farmer → Cart add_item. Folder **Bulk delete — staff JWT**: "
+            "`DELETE .../products/delete-all/` and `DELETE .../categories/delete-all/` (needs `is_staff`; see request descriptions).",
         )
     )
 
