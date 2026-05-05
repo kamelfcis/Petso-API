@@ -127,6 +127,35 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+### Update on VPS / `git pull` missing new files
+
+This repo’s default branch is **`main`**. New tools live at the repo root and under `petso_project/`:
+
+- `petso_check_vps.py` (run: `python petso_check_vps.py`)
+- `petso_project/vps_upload_checks.py`, `petso_project/apps.py`, `petso_project/management/commands/petso_check_vps.py`
+
+On the server, from the folder that contains `manage.py`:
+
+```bash
+git remote -v
+git branch -vv
+git fetch origin
+git pull origin main
+ls -la petso_check_vps.py petso_project/management/commands/petso_check_vps.py
+```
+
+If `git remote -v` is **not** `https://github.com/kamelfcis/Petso-API.git`, add the correct remote or clone that repo. If your default branch is `master`, run `git pull origin main` anyway, or merge `origin/main` after `git fetch`.
+
+If you **cannot use git**, download the raw files from GitHub (`main` branch) for the paths above and place them next to `manage.py` / under `petso_project/`.
+
+Example (Linux):
+
+```bash
+curl -sO https://raw.githubusercontent.com/kamelfcis/Petso-API/main/petso_check_vps.py
+curl -sO https://raw.githubusercontent.com/kamelfcis/Petso-API/main/petso_project/vps_upload_checks.py
+# also copy apps.py, management/commands/petso_check_vps.py, and settings.py if your pull is stuck
+```
+
 ## Postman Collections
 
 - `Petso_Postman_Collection.json`: سيناريو محلي كامل (تسجيل ثم دخول مباشرة)
