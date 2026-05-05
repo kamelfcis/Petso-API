@@ -548,6 +548,27 @@ def append_shared_api_folders(items):
             "/ecommerce/product-images/?product={{product_id}}",
             None,
         ),
+        req(
+            "Delete all products",
+            "DELETE",
+            "/ecommerce/products/delete-all/",
+            None,
+            desc=(
+                "**Staff only** (`is_staff`). JWT from **Login - Admin** (or any staff user). "
+                "Deletes every product; related images, reviews, and cart line items CASCADE. "
+                "Categories are unchanged."
+            ),
+        ),
+        req(
+            "Delete all categories",
+            "DELETE",
+            "/ecommerce/categories/delete-all/",
+            None,
+            desc=(
+                "**Staff only** (`is_staff`). Deletes every category; products in those categories CASCADE. "
+                "If you only want products gone, use **Delete all products** first and keep categories, or only call that endpoint."
+            ),
+        ),
         req("List my cart", "GET", "/ecommerce/cart/", None),
         req(
             "Cart - Add item",
@@ -563,7 +584,7 @@ def append_shared_api_folders(items):
             ecom_items,
             "Typical order: Login Company → Create company profile → Create category → **Create product** "
             "(form-data + `image` File), or JSON alternate / POST /ecommerce/product-images/. "
-            "Then Login Farmer → Cart add_item.",
+            "Then Login Farmer → Cart add_item. **Delete all products** / **Delete all categories** require staff JWT.",
         )
     )
 

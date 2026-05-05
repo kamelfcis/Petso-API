@@ -1078,6 +1078,44 @@
           }
         },
         {
+          "name": "Delete all products",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/ecommerce/products/delete-all/",
+            "description": "**Staff only** (`is_staff`). JWT from **Login - Admin** (or any staff user). Deletes every product; related images, reviews, and cart line items CASCADE. Categories are unchanged.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete all categories",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/ecommerce/categories/delete-all/",
+            "description": "**Staff only** (`is_staff`). Deletes every category; products in those categories CASCADE. If you only want products gone, use **Delete all products** first and keep categories, or only call that endpoint.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "List my cart",
           "request": {
             "method": "GET",
@@ -1129,7 +1167,7 @@
           }
         }
       ],
-      "description": "Typical order: Login Company → Create company profile → Create category → **Create product** (form-data + `image` File), or JSON alternate / POST /ecommerce/product-images/. Then Login Farmer → Cart add_item."
+      "description": "Typical order: Login Company → Create company profile → Create category → **Create product** (form-data + `image` File), or JSON alternate / POST /ecommerce/product-images/. Then Login Farmer → Cart add_item. **Delete all products** / **Delete all categories** require staff JWT."
     },
     {
       "name": "06 - Orders",

@@ -19,6 +19,18 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
+    @action(
+        detail=False,
+        methods=["delete"],
+        url_path="delete-all",
+        permission_classes=(permissions.IsAdminUser,),
+    )
+    def delete_all(self, request):
+        """Delete every category. Products in those categories are removed by CASCADE."""
+        n = Category.objects.count()
+        Category.objects.all().delete()
+        return Response({"deleted": n}, status=status.HTTP_200_OK)
+
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.select_related("category", "company").prefetch_related("images", "reviews")
@@ -99,6 +111,18 @@ class ProductViewSet(viewsets.ModelViewSet):
         if self.action == "list" and "is_active" not in self.request.query_params:
             qs = qs.filter(is_active=True)
         return qs
+
+    @action(
+        detail=False,
+        methods=["delete"],
+        url_path="delete-all",
+        permission_classes=(permissions.IsAdminUser,),
+    )
+    def delete_all(self, request):
+        """Delete every product (images, reviews, cart items CASCADE). Categories stay."""
+        n = Product.objects.count()
+        Product.objects.all().delete()
+        return Response({"deleted": n}, status=status.HTTP_200_OK)
 
 
 class ProductImageViewSet(viewsets.ModelViewSet):
