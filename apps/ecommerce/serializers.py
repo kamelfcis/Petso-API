@@ -87,7 +87,11 @@ class ProductSerializer(serializers.ModelSerializer):
         child=serializers.DictField(),
         write_only=True,
         required=False,
-        help_text="Optional. Each item is passed to ProductImage (use remote_image_url per image).",
+        help_text=(
+            "Optional (JSON). Each item creates a ProductImage via remote_image_url download. "
+            "For multipart, omit this and send form field `image` (File) on POST/PATCH /ecommerce/products/ "
+            "same pattern as social posts."
+        ),
     )
 
     class Meta:

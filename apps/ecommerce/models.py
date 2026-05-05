@@ -3,6 +3,26 @@ from django.conf import settings
 from apps.companies.models import Company
 from django.utils.text import slugify
 
+_SLUG_MAX_LEN = 50  # SlugField default max_length
+
+
+def _unique_slug_for(model_cls, source: str, *, exclude_pk=None) -> str:
+    """Build a slug from `source` (typically name) that does not collide with existing rows."""
+    base = slugify(source) or "item"
+    base = base[:_SLUG_MAX_LEN]
+    slug = base
+    qs = model_cls.objects.all()
+    if exclude_pk is not None:
+        qs = qs.exclude(pk=exclude_pk)
+    n = 1
+    while qs.filter(slug=slug).exists():
+        n += 1
+        suffix = f"-{n}"
+        trunc = max(1, _SLUG_MAX_LEN - len(suffix))
+        slug = f"{base[:trunc]}{suffix}"
+    return slug
+
+
 class Category(models.Model):
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='subcategories')
     name = models.CharField(max_length=100)
@@ -10,9 +30,12 @@ class Category(models.Model):
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ("name", "id")
+
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
+            self.slug = _unique_slug_for(Category, self.name, exclude_pk=self.pk)
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -33,9 +56,12 @@ class Product(models.Model):
     expiration_date = models.DateField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ("-created_at", "id")
+
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
+            self.slug = _unique_slug_for(Product, self.name, exclude_pk=self.pk)
         super().save(*args, **kwargs)
 
     def __str__(self):

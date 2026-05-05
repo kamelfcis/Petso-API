@@ -480,15 +480,43 @@ def append_shared_api_folders(items):
             ],
         ),
         req("Search products", "GET", "/ecommerce/products/?search=feed", None),
-        req(
+        req_formdata(
             "Create product",
+            "POST",
+            "/ecommerce/products/",
+            [
+                {"key": "company", "type": "text", "value": "{{company_profile_id}}"},
+                {"key": "category", "type": "text", "value": "{{category_id}}"},
+                {"key": "sku", "type": "text", "value": "SKU-{{$timestamp}}"},
+                {"key": "name", "type": "text", "value": "Starter Feed 25kg"},
+                {"key": "description", "type": "text", "value": "High protein starter for broilers"},
+                {"key": "unit_price", "type": "text", "value": "450.00"},
+                {"key": "currency", "type": "text", "value": "EGP"},
+                {"key": "stock", "type": "text", "value": "200"},
+                {"key": "is_active", "type": "text", "value": "true"},
+                {"key": "requires_prescription", "type": "text", "value": "false"},
+                {"key": "image", "type": "file"},
+            ],
+            desc=(
+                "Body **form-data**: product fields as **Text**; `image` = **File** (Select Files). "
+                "Same pattern as **Create post**. Leave extra headers empty. Optional: omit `image` if you add images later via JSON or product-images."
+            ),
+            tests=[
+                "if (pm.response.code === 201) {",
+                "  var j = pm.response.json();",
+                '  if (j.id) pm.collectionVariables.set("product_id", String(j.id));',
+                "}",
+            ],
+        ),
+        req(
+            "Create product (JSON + remote images)",
             "POST",
             "/ecommerce/products/",
             {
                 "company": "{{company_profile_id}}",
                 "category": "{{category_id}}",
-                "sku": "SKU-{{$timestamp}}",
-                "name": "Starter Feed 25kg",
+                "sku": "SKU-JSON-{{$timestamp}}",
+                "name": "Starter Feed 25kg (remote image)",
                 "description": "High protein starter for broilers",
                 "unit_price": "450.00",
                 "currency": "EGP",
@@ -504,8 +532,8 @@ def append_shared_api_folders(items):
                 ],
             },
             desc=(
-                "company_profile_id = Company PK. Optional images_data: remote_image_url is downloaded to MEDIA. "
-                "Or POST /ecommerce/product-images/ with multipart `image` + `product`."
+                "Alternative: JSON with `images_data` (remote_image_url per row). "
+                "For a local file use **Create product** (form-data + `image` File)."
             ),
             tests=[
                 "if (pm.response.code === 201) {",
@@ -533,7 +561,8 @@ def append_shared_api_folders(items):
         folder(
             "05 - E-commerce",
             ecom_items,
-            "Typical order: Login Company → Create company profile → Create category → Create product (images_data or product-images). "
+            "Typical order: Login Company → Create company profile → Create category → **Create product** "
+            "(form-data + `image` File), or JSON alternate / POST /ecommerce/product-images/. "
             "Then Login Farmer → Cart add_item.",
         )
     )
@@ -600,7 +629,7 @@ def append_shared_api_folders(items):
     soc_items = [
         req("List posts", "GET", "/social/posts/", None),
         req_formdata(
-            "Create post (multipart file)",
+            "Create post",
             "POST",
             "/social/posts/",
             [
@@ -608,9 +637,8 @@ def append_shared_api_folders(items):
                 {"key": "image", "type": "file"},
             ],
             desc=(
-                "Upload a photo as a file: Body **form-data**. "
-                "`content` = **Text**; `image` = **File** (not Text — click **Select Files**). "
-                "If Postman shows a **yellow warning** on the filename, the path is broken: re-pick the file from disk. "
+                "Default flow: Body **form-data**. `content` = **Text**; `image` = **File** (Select Files). "
+                "Same pattern as **Create product**. If Postman shows a **yellow warning** on the filename, re-pick the file. "
                 "Leave headers empty. On VPS, nginx: `client_max_body_size 10m;` for `/api/`."
             ),
             tests=[
@@ -629,8 +657,8 @@ def append_shared_api_folders(items):
                 "remote_image_url": "https://placehold.co/600x400/png",
             },
             desc=(
-                "JSON body: optional `remote_image_url` or legacy https `image_url` — server downloads the file. "
-                "For uploading **your own file**, use **Create post (multipart file)** instead."
+                "Alternative: JSON with `remote_image_url` (server downloads). "
+                "For a **local file**, use **Create post** (form-data + `image` File)."
             ),
             tests=[
                 "if (pm.response.code === 201) {",
@@ -638,7 +666,6 @@ def append_shared_api_folders(items):
                 '  if (j.id) pm.collectionVariables.set("post_id", String(j.id));',
                 "}",
             ],
-            omit_json_content_type=True,
         ),
         req(
             "Create post (image base64 JSON)",
@@ -649,7 +676,7 @@ def append_shared_api_folders(items):
                 "image_base64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
             },
             desc=(
-                "Optional fallback only if multipart is blocked. Prefer **Create post (multipart file)**."
+                "Optional fallback only if multipart is blocked. Prefer **Create post** (form-data + File)."
             ),
             tests=[
                 "if (pm.response.code === 201) {",
@@ -657,7 +684,6 @@ def append_shared_api_folders(items):
                 '  if (j.id) pm.collectionVariables.set("post_id", String(j.id));',
                 "}",
             ],
-            omit_json_content_type=True,
         ),
         req("List comments", "GET", "/social/comments/", None),
         req(

@@ -873,6 +873,99 @@
           "name": "Create product",
           "request": {
             "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/ecommerce/products/",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "company",
+                  "type": "text",
+                  "value": "{{company_profile_id}}"
+                },
+                {
+                  "key": "category",
+                  "type": "text",
+                  "value": "{{category_id}}"
+                },
+                {
+                  "key": "sku",
+                  "type": "text",
+                  "value": "SKU-{{$timestamp}}"
+                },
+                {
+                  "key": "name",
+                  "type": "text",
+                  "value": "Starter Feed 25kg"
+                },
+                {
+                  "key": "description",
+                  "type": "text",
+                  "value": "High protein starter for broilers"
+                },
+                {
+                  "key": "unit_price",
+                  "type": "text",
+                  "value": "450.00"
+                },
+                {
+                  "key": "currency",
+                  "type": "text",
+                  "value": "EGP"
+                },
+                {
+                  "key": "stock",
+                  "type": "text",
+                  "value": "200"
+                },
+                {
+                  "key": "is_active",
+                  "type": "text",
+                  "value": "true"
+                },
+                {
+                  "key": "requires_prescription",
+                  "type": "text",
+                  "value": "false"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "description": "Body **form-data**: product fields as **Text**; `image` = **File** (Select Files). Same pattern as **Create post**. Leave extra headers empty. Optional: omit `image` if you add images later via JSON or product-images.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"product_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create product (JSON + remote images)",
+          "request": {
+            "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
@@ -880,10 +973,10 @@
               }
             ],
             "url": "{{base_url}}/api/ecommerce/products/",
-            "description": "company_profile_id = Company PK. Optional images_data: remote_image_url is downloaded to MEDIA. Or POST /ecommerce/product-images/ with multipart `image` + `product`.",
+            "description": "Alternative: JSON with `images_data` (remote_image_url per row). For a local file use **Create product** (form-data + `image` File).",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"company\": \"{{company_profile_id}}\",\n  \"category\": \"{{category_id}}\",\n  \"sku\": \"SKU-{{$timestamp}}\",\n  \"name\": \"Starter Feed 25kg\",\n  \"description\": \"High protein starter for broilers\",\n  \"unit_price\": \"450.00\",\n  \"currency\": \"EGP\",\n  \"stock\": 200,\n  \"is_active\": true,\n  \"requires_prescription\": false,\n  \"images_data\": [\n    {\n      \"remote_image_url\": \"https://placehold.co/200x200/png\",\n      \"alt_text\": \"Main\",\n      \"position\": 0\n    }\n  ]\n}",
+              "raw": "{\n  \"company\": \"{{company_profile_id}}\",\n  \"category\": \"{{category_id}}\",\n  \"sku\": \"SKU-JSON-{{$timestamp}}\",\n  \"name\": \"Starter Feed 25kg (remote image)\",\n  \"description\": \"High protein starter for broilers\",\n  \"unit_price\": \"450.00\",\n  \"currency\": \"EGP\",\n  \"stock\": 200,\n  \"is_active\": true,\n  \"requires_prescription\": false,\n  \"images_data\": [\n    {\n      \"remote_image_url\": \"https://placehold.co/200x200/png\",\n      \"alt_text\": \"Main\",\n      \"position\": 0\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -986,7 +1079,7 @@
           }
         }
       ],
-      "description": "Typical order: Login Company → Create company profile → Create category → Create product (images_data or product-images). Then Login Farmer → Cart add_item."
+      "description": "Typical order: Login Company → Create company profile → Create category → **Create product** (form-data + `image` File), or JSON alternate / POST /ecommerce/product-images/. Then Login Farmer → Cart add_item."
     },
     {
       "name": "06 - Orders",
@@ -1231,7 +1324,7 @@
           }
         },
         {
-          "name": "Create post (multipart file)",
+          "name": "Create post",
           "request": {
             "method": "POST",
             "header": [],
@@ -1251,7 +1344,7 @@
                 }
               ]
             },
-            "description": "Upload a photo as a file: Body **form-data**. `content` = **Text**; `image` = **File** (not Text — click **Select Files**). If Postman shows a **yellow warning** on the filename, the path is broken: re-pick the file from disk. Leave headers empty. On VPS, nginx: `client_max_body_size 10m;` for `/api/`.",
+            "description": "Default flow: Body **form-data**. `content` = **Text**; `image` = **File** (Select Files). Same pattern as **Create product**. If Postman shows a **yellow warning** on the filename, re-pick the file. Leave headers empty. On VPS, nginx: `client_max_body_size 10m;` for `/api/`.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1282,9 +1375,14 @@
           "name": "Create post (JSON + remote image URL)",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": "{{base_url}}/api/social/posts/",
-            "description": "JSON body: optional `remote_image_url` or legacy https `image_url` — server downloads the file. For uploading **your own file**, use **Create post (multipart file)** instead.",
+            "description": "Alternative: JSON with `remote_image_url` (server downloads). For a **local file**, use **Create post** (form-data + `image` File).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"content\": \"Great harvest this week!\",\n  \"remote_image_url\": \"https://placehold.co/600x400/png\"\n}",
@@ -1324,9 +1422,14 @@
           "name": "Create post (image base64 JSON)",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": "{{base_url}}/api/social/posts/",
-            "description": "Optional fallback only if multipart is blocked. Prefer **Create post (multipart file)**.",
+            "description": "Optional fallback only if multipart is blocked. Prefer **Create post** (form-data + File).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"content\": \"1x1 PNG via image_base64\",\n  \"image_base64\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==\"\n}",
