@@ -45,10 +45,9 @@ class PoultryFlockViewSet(viewsets.ModelViewSet):
                 )
             serializer.save()
             return
-        try:
-            farmer_profile = user.farmer_profile
-        except FarmerProfile.DoesNotExist as exc:
+        farmer_profile = FarmerProfile.objects.filter(user=user).first()
+        if farmer_profile is None:
             raise ValidationError(
                 {"farmer": "Create a farmer profile (POST /api/farmers/profile/) before adding flocks."}
-            ) from exc
+            )
         serializer.save(farmer=farmer_profile)
