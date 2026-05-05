@@ -141,7 +141,25 @@ git remote -v
 git branch -vv
 git fetch origin
 git pull origin main
+# Linux:
 ls -la petso_check_vps.py petso_project/management/commands/petso_check_vps.py
+# Windows PowerShell:
+dir petso_check_vps.py, petso_project\management\commands\petso_check_vps.py
+```
+
+If **`git pull` aborts** with *local changes would be overwritten* (often `.env.example`), either **keep your edits** and merge later:
+
+```powershell
+git stash push -m "local env example" -- .env.example
+git pull origin main
+git stash pop   # optional; resolve conflicts if any
+```
+
+or **discard local changes** to match GitHub (only if you do not need them):
+
+```powershell
+git checkout -- .env.example
+git pull origin main
 ```
 
 If `git remote -v` is **not** `https://github.com/kamelfcis/Petso-API.git`, add the correct remote or clone that repo. If your default branch is `master`, run `git pull origin main` anyway, or merge `origin/main` after `git fetch`.
