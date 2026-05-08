@@ -1,5 +1,6 @@
 from django.conf import settings
 from rest_framework import serializers, viewsets, permissions, status
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
@@ -28,6 +29,7 @@ def _http_url_from_initial_image_url(initial_data):
 class PostSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
     likes_count = serializers.SerializerMethodField(read_only=True)
+    is_liked_by_me = serializers.SerializerMethodField(read_only=True)
     # Full URL for clients (uploaded file or legacy external link)
     image_url = serializers.SerializerMethodField(read_only=True)
     # POST JSON: fetch this URL and store file in `image`
@@ -56,6 +58,7 @@ class PostSerializer(serializers.ModelSerializer):
             "image_url",
             "created_at",
             "likes_count",
+            "is_liked_by_me",
         )
         read_only_fields = ("image_url",)
         extra_kwargs = {"image": {"required": False, "allow_null": True}}
@@ -92,6 +95,12 @@ class PostSerializer(serializers.ModelSerializer):
 
     def get_likes_count(self, obj):
         return obj.likes.count()
+
+    def get_is_liked_by_me(self, obj):
+        request = self.context.get("request")
+        if request and request.user and request.user.is_authenticated:
+            return obj.likes.filter(user=request.user).exists()
+        return False
 
     def validate(self, attrs):
         request = self.context.get("request")
@@ -254,6 +263,26 @@ class PostViewSet(viewsets.ModelViewSet):
             serializer.save(image=raw)
             return
         serializer.save()
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="like",
+        permission_classes=(permissions.IsAuthenticated,),
+    )
+    def like(self, request, pk=None):
+        """Toggle like on a post. Returns liked=True/False and current likes_count."""
+        post = self.get_object()
+        like_obj, created = PostLike.objects.get_or_create(post=post, user=request.user)
+        if not created:
+            like_obj.delete()
+            liked = False
+        else:
+            liked = True
+        return Response(
+            {"liked": liked, "likes_count": post.likes.count()},
+            status=status.HTTP_200_OK,
+        )
 
 
 class CommentViewSet(viewsets.ModelViewSet):

@@ -301,6 +301,8 @@ def collection_variables(*, production: bool):
             {"key": "vet_profile_id", "value": "1", "type": "string"},
             {"key": "farmer_user_id", "value": "1", "type": "string"},
             {"key": "vet_user_id", "value": "2", "type": "string"},
+            {"key": "slot_id", "value": "1", "type": "string"},
+            {"key": "appointment_id", "value": "1", "type": "string"},
             {"key": "post_id", "value": "1", "type": "string"},
             {"key": "chat_id", "value": "1", "type": "string"},
         ]
@@ -646,6 +648,50 @@ def append_shared_api_folders(items):
     items.append(folder("07 - Payments", pay_items))
 
     med_items = [
+        req(
+            "List all slots (public)",
+            "GET",
+            "/medical/slots/",
+            None,
+            auth="noauth",
+            desc="No auth required. Filter by vet: `?vet={{vet_profile_id}}`. Filter available: `?is_available=true`.",
+        ),
+        req(
+            "List vet's own slots",
+            "GET",
+            "/medical/slots/?vet={{vet_profile_id}}",
+            None,
+            desc="Filter slots for a specific vet. No auth required.",
+            auth="noauth",
+        ),
+        req(
+            "Add slot (vet only)",
+            "POST",
+            "/medical/slots/",
+            {
+                "date": "2026-06-10",
+                "start_time": "09:00:00",
+                "end_time": "09:30:00",
+                "is_available": True,
+            },
+            desc=(
+                "Login as **vet**. `vet` is assigned automatically from JWT — do not include it in body. "
+                "Run **Create vet profile** first."
+            ),
+            tests=[
+                "if (pm.response.code === 201) {",
+                "  var j = pm.response.json();",
+                '  if (j.id) pm.collectionVariables.set("slot_id", String(j.id));',
+                "}",
+            ],
+        ),
+        req(
+            "Update slot availability",
+            "PATCH",
+            "/medical/slots/{{slot_id}}/",
+            {"is_available": False},
+            desc="Vet marks their slot as unavailable (or any field update).",
+        ),
         req("List appointments", "GET", "/medical/appointments/", None),
         req(
             "Create appointment",
@@ -654,12 +700,18 @@ def append_shared_api_folders(items):
             {
                 "farmer": "{{farmer_profile_id}}",
                 "vet": "{{vet_profile_id}}",
-                "slot": None,
+                "slot": "{{slot_id}}",
                 "status": "scheduled",
-                "scheduled_start": "2026-05-01T10:00:00Z",
-                "scheduled_end": "2026-05-01T10:30:00Z",
+                "scheduled_start": "2026-06-10T09:00:00Z",
+                "scheduled_end": "2026-06-10T09:30:00Z",
             },
-            desc="Set vet_profile_id from GET /vets/profiles/",
+            desc="Set slot_id from **Add slot** or **List all slots**.",
+            tests=[
+                "if (pm.response.code === 201) {",
+                "  var j = pm.response.json();",
+                '  if (j.id) pm.collectionVariables.set("appointment_id", String(j.id));',
+                "}",
+            ],
         ),
         req("List prescriptions", "GET", "/medical/prescriptions/", None),
         req(
@@ -736,6 +788,17 @@ def append_shared_api_folders(items):
                 '  if (j.id) pm.collectionVariables.set("post_id", String(j.id));',
                 "}",
             ],
+        ),
+        req(
+            "Like / Unlike post",
+            "POST",
+            "/social/posts/{{post_id}}/like/",
+            None,
+            desc=(
+                "Toggle like on a post. First call **likes** the post; second call **unlikes** it. "
+                "Response: `{ \"liked\": true/false, \"likes_count\": <int> }`. "
+                "Requires Bearer token. The post list also returns `is_liked_by_me` and `likes_count`."
+            ),
         ),
         req("List comments", "GET", "/social/comments/", None),
         req(
