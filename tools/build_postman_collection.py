@@ -446,8 +446,10 @@ def append_shared_api_folders(items):
                 "years_of_experience": 7,
                 "available": True,
                 "rating": "0.00",
+                "gps_lat": "30.0444",
+                "gps_long": "31.2357",
             },
-            desc="If 400: backend may need perform_create to bind user to VetProfile.",
+            desc="Optional `gps_lat` / `gps_long` (same idea as farmer profile). `user` is bound from JWT in `perform_create`.",
         ),
         req("List vet reviews", "GET", "/vets/reviews/", None),
         req(

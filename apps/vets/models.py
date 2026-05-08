@@ -12,6 +12,8 @@ class VetProfile(models.Model):
     years_of_experience = models.IntegerField(default=0)
     available = models.BooleanField(default=True)
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
+    gps_lat = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
+    gps_long = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

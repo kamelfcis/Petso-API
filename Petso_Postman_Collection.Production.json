@@ -658,10 +658,10 @@
               }
             ],
             "url": "{{base_url}}/api/vets/profiles/",
-            "description": "If 400: backend may need perform_create to bind user to VetProfile.",
+            "description": "Optional `gps_lat` / `gps_long` (same idea as farmer profile). `user` is bound from JWT in `perform_create`.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"license_number\": \"VET-LIC-{{$timestamp}}\",\n  \"specialties\": \"Poultry, Avian medicine\",\n  \"qualifications\": \"DVM, MSc Poultry Health\",\n  \"clinic_address\": \"15 Clinic St, Cairo\",\n  \"years_of_experience\": 7,\n  \"available\": true,\n  \"rating\": \"0.00\"\n}",
+              "raw": "{\n  \"license_number\": \"VET-LIC-{{$timestamp}}\",\n  \"specialties\": \"Poultry, Avian medicine\",\n  \"qualifications\": \"DVM, MSc Poultry Health\",\n  \"clinic_address\": \"15 Clinic St, Cairo\",\n  \"years_of_experience\": 7,\n  \"available\": true,\n  \"rating\": \"0.00\",\n  \"gps_lat\": \"30.0444\",\n  \"gps_long\": \"31.2357\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
