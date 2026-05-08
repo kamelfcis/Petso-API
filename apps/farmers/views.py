@@ -1,5 +1,7 @@
 from rest_framework import viewsets, permissions
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
 from .models import FarmerProfile, PoultryFlock
 from .serializers import FarmerProfileSerializer, PoultryFlockSerializer
@@ -13,6 +15,18 @@ class FarmerProfileViewSet(viewsets.ModelViewSet):
         if self.request.user.role == 'admin':
             return self.queryset
         return self.queryset.filter(user=self.request.user)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="all",
+        permission_classes=(permissions.AllowAny,),
+    )
+    def list_all(self, request):
+        """Public endpoint — returns all farmer profiles without authentication."""
+        qs = FarmerProfile.objects.all().order_by("id")
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         # One profile per user (OneToOne). Re-POSTing must update, not insert — avoids UNIQUE on user_id.

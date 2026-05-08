@@ -6,7 +6,13 @@ from .serializers import (
     RegisterSerializer,
     UserNotificationPreferenceSerializer,
     UserActivityLogSerializer,
+    PetsoTokenObtainPairSerializer,
 )
+
+
+class PetsoTokenObtainPairView(TokenObtainPairView):
+    """JWT login that also returns user_id, email, name, and role."""
+    serializer_class = PetsoTokenObtainPairSerializer
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()

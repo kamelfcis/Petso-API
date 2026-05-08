@@ -1,7 +1,20 @@
 from django.db import transaction
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import User, UserNotificationPreference, UserActivityLog
+
+
+class PetsoTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """Extend the default JWT login response with user_id, email, name, and role."""
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data["user_id"] = self.user.pk
+        data["email"] = self.user.email
+        data["name"] = self.user.name
+        data["role"] = self.user.role
+        return data
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

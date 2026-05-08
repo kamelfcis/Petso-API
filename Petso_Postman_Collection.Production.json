@@ -253,6 +253,7 @@
                   "try { var j = pm.response.json();",
                   "if (j.access) pm.collectionVariables.set(\"access_token\", j.access);",
                   "if (j.refresh) pm.collectionVariables.set(\"refresh_token\", j.refresh);",
+                  "if (j.user_id) pm.collectionVariables.set(\"admin_user_id\", String(j.user_id));",
                   "} catch (e) {}"
                 ],
                 "type": "text/javascript"
@@ -289,21 +290,10 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "function uidFromJwt(token) {",
-                  "  try {",
-                  "    var p = token.split('.')[1];",
-                  "    var s = p.replace(/-/g, '+').replace(/_/g, '/');",
-                  "    var pad = s.length % 4 ? '='.repeat(4 - s.length % 4) : '';",
-                  "    var json = atob(s + pad);",
-                  "    return JSON.parse(json).user_id;",
-                  "  } catch (e) { return null; }",
-                  "}",
                   "try { var j = pm.response.json();",
-                  "if (j.access) { pm.collectionVariables.set(\"access_token\", j.access);",
-                  "  var uid = uidFromJwt(j.access);",
-                  "  if (uid) pm.collectionVariables.set(\"farmer_user_id\", String(uid));",
-                  "}",
+                  "if (j.access) pm.collectionVariables.set(\"access_token\", j.access);",
                   "if (j.refresh) pm.collectionVariables.set(\"refresh_token\", j.refresh);",
+                  "if (j.user_id) pm.collectionVariables.set(\"farmer_user_id\", String(j.user_id));",
                   "} catch (e) {}"
                 ],
                 "type": "text/javascript"
@@ -340,21 +330,10 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "function uidFromJwt(token) {",
-                  "  try {",
-                  "    var p = token.split('.')[1];",
-                  "    var s = p.replace(/-/g, '+').replace(/_/g, '/');",
-                  "    var pad = s.length % 4 ? '='.repeat(4 - s.length % 4) : '';",
-                  "    var json = atob(s + pad);",
-                  "    return JSON.parse(json).user_id;",
-                  "  } catch (e) { return null; }",
-                  "}",
                   "try { var j = pm.response.json();",
-                  "if (j.access) { pm.collectionVariables.set(\"access_token\", j.access);",
-                  "  var uid = uidFromJwt(j.access);",
-                  "  if (uid) pm.collectionVariables.set(\"vet_user_id\", String(uid));",
-                  "}",
+                  "if (j.access) pm.collectionVariables.set(\"access_token\", j.access);",
                   "if (j.refresh) pm.collectionVariables.set(\"refresh_token\", j.refresh);",
+                  "if (j.user_id) pm.collectionVariables.set(\"vet_user_id\", String(j.user_id));",
                   "} catch (e) {}"
                 ],
                 "type": "text/javascript"
@@ -391,21 +370,10 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "function uidFromJwt(token) {",
-                  "  try {",
-                  "    var p = token.split('.')[1];",
-                  "    var s = p.replace(/-/g, '+').replace(/_/g, '/');",
-                  "    var pad = s.length % 4 ? '='.repeat(4 - s.length % 4) : '';",
-                  "    var json = atob(s + pad);",
-                  "    return JSON.parse(json).user_id;",
-                  "  } catch (e) { return null; }",
-                  "}",
                   "try { var j = pm.response.json();",
-                  "if (j.access) { pm.collectionVariables.set(\"access_token\", j.access);",
-                  "  var uid = uidFromJwt(j.access);",
-                  "  if (uid) pm.collectionVariables.set(\"company_user_id\", String(uid));",
-                  "}",
+                  "if (j.access) pm.collectionVariables.set(\"access_token\", j.access);",
                   "if (j.refresh) pm.collectionVariables.set(\"refresh_token\", j.refresh);",
+                  "if (j.user_id) pm.collectionVariables.set(\"company_user_id\", String(j.user_id));",
                   "} catch (e) {}"
                 ],
                 "type": "text/javascript"
@@ -457,6 +425,18 @@
     {
       "name": "02 - Farmer (login as farmer)",
       "item": [
+        {
+          "name": "List all farmers (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/farmers/profile/all/",
+            "description": "No authentication needed. Returns all farmer profiles.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
         {
           "name": "List farmer profiles",
           "request": {
@@ -591,6 +571,18 @@
     {
       "name": "03 - Vet (login as vet)",
       "item": [
+        {
+          "name": "List all vets (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/vets/profiles/all/",
+            "description": "No authentication needed. Returns all vet profiles.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
         {
           "name": "List vet profiles",
           "request": {

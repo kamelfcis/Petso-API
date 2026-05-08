@@ -135,63 +135,31 @@ def build_auth_items(*, production: bool):
         ),
     ]
     jwt_tests_farmer = [
-        "function uidFromJwt(token) {",
-        "  try {",
-        "    var p = token.split('.')[1];",
-        "    var s = p.replace(/-/g, '+').replace(/_/g, '/');",
-        "    var pad = s.length % 4 ? '='.repeat(4 - s.length % 4) : '';",
-        "    var json = atob(s + pad);",
-        "    return JSON.parse(json).user_id;",
-        "  } catch (e) { return null; }",
-        "}",
         "try { var j = pm.response.json();",
-        'if (j.access) { pm.collectionVariables.set("access_token", j.access);',
-        "  var uid = uidFromJwt(j.access);",
-        '  if (uid) pm.collectionVariables.set("farmer_user_id", String(uid));',
-        "}",
+        'if (j.access) pm.collectionVariables.set("access_token", j.access);',
         'if (j.refresh) pm.collectionVariables.set("refresh_token", j.refresh);',
+        'if (j.user_id) pm.collectionVariables.set("farmer_user_id", String(j.user_id));',
         "} catch (e) {}",
     ]
     jwt_tests_vet = [
-        "function uidFromJwt(token) {",
-        "  try {",
-        "    var p = token.split('.')[1];",
-        "    var s = p.replace(/-/g, '+').replace(/_/g, '/');",
-        "    var pad = s.length % 4 ? '='.repeat(4 - s.length % 4) : '';",
-        "    var json = atob(s + pad);",
-        "    return JSON.parse(json).user_id;",
-        "  } catch (e) { return null; }",
-        "}",
         "try { var j = pm.response.json();",
-        'if (j.access) { pm.collectionVariables.set("access_token", j.access);',
-        "  var uid = uidFromJwt(j.access);",
-        '  if (uid) pm.collectionVariables.set("vet_user_id", String(uid));',
-        "}",
+        'if (j.access) pm.collectionVariables.set("access_token", j.access);',
         'if (j.refresh) pm.collectionVariables.set("refresh_token", j.refresh);',
+        'if (j.user_id) pm.collectionVariables.set("vet_user_id", String(j.user_id));',
         "} catch (e) {}",
     ]
     jwt_tests_company = [
-        "function uidFromJwt(token) {",
-        "  try {",
-        "    var p = token.split('.')[1];",
-        "    var s = p.replace(/-/g, '+').replace(/_/g, '/');",
-        "    var pad = s.length % 4 ? '='.repeat(4 - s.length % 4) : '';",
-        "    var json = atob(s + pad);",
-        "    return JSON.parse(json).user_id;",
-        "  } catch (e) { return null; }",
-        "}",
         "try { var j = pm.response.json();",
-        'if (j.access) { pm.collectionVariables.set("access_token", j.access);',
-        "  var uid = uidFromJwt(j.access);",
-        '  if (uid) pm.collectionVariables.set("company_user_id", String(uid));',
-        "}",
+        'if (j.access) pm.collectionVariables.set("access_token", j.access);',
         'if (j.refresh) pm.collectionVariables.set("refresh_token", j.refresh);',
+        'if (j.user_id) pm.collectionVariables.set("company_user_id", String(j.user_id));',
         "} catch (e) {}",
     ]
     jwt_tests_admin = [
         "try { var j = pm.response.json();",
         'if (j.access) pm.collectionVariables.set("access_token", j.access);',
         'if (j.refresh) pm.collectionVariables.set("refresh_token", j.refresh);',
+        'if (j.user_id) pm.collectionVariables.set("admin_user_id", String(j.user_id));',
         "} catch (e) {}",
     ]
     login_items = []
@@ -332,6 +300,14 @@ def collection_variables(*, production: bool):
 
 def append_shared_api_folders(items):
     farmer_items = [
+        req(
+            "List all farmers (public)",
+            "GET",
+            "/farmers/profile/all/",
+            None,
+            auth="noauth",
+            desc="No authentication needed. Returns all farmer profiles.",
+        ),
         req("List farmer profiles", "GET", "/farmers/profile/", None),
         req(
             "Create farmer profile",
@@ -384,6 +360,14 @@ def append_shared_api_folders(items):
     items.append(folder("02 - Farmer (login as farmer)", farmer_items))
 
     vet_items = [
+        req(
+            "List all vets (public)",
+            "GET",
+            "/vets/profiles/all/",
+            None,
+            auth="noauth",
+            desc="No authentication needed. Returns all vet profiles.",
+        ),
         req(
             "List vet profiles",
             "GET",
