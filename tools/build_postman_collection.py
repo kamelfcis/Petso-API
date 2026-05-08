@@ -216,6 +216,16 @@ def build_auth_items(*, production: bool):
                     "} catch (e) {}",
                 ],
             ),
+            req(
+                "Get current user (me)",
+                "GET",
+                "/auth/me/",
+                None,
+                desc=(
+                    "Returns the logged-in user's profile: id, email, name, phone_number, role, is_verified, date_joined. "
+                    "Requires Bearer token (any role)."
+                ),
+            ),
         ]
     )
     items.extend(login_items)

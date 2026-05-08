@@ -1,4 +1,6 @@
 from rest_framework import viewsets, permissions, generics
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import User, UserNotificationPreference, UserActivityLog
 from .serializers import (
@@ -13,6 +15,15 @@ from .serializers import (
 class PetsoTokenObtainPairView(TokenObtainPairView):
     """JWT login that also returns user_id, email, name, and role."""
     serializer_class = PetsoTokenObtainPairSerializer
+
+class CurrentUserView(APIView):
+    """GET /api/auth/me/ — returns the logged-in user's profile."""
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        serializer = UserSerializer(request.user, context={"request": request})
+        return Response(serializer.data)
+
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()

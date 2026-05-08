@@ -367,6 +367,25 @@
               }
             }
           ]
+        },
+        {
+          "name": "Get current user (me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/auth/me/",
+            "description": "Returns the logged-in user's profile: id, email, name, phone_number, role, is_verified, date_joined. Requires Bearer token (any role).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
         }
       ],
       "description": "JWT: Login requests save access_token and refresh_token to collection variables."

@@ -7,6 +7,7 @@ from .views import (
     UserNotificationPreferenceViewSet,
     UserActivityLogViewSet,
     PetsoTokenObtainPairView,
+    CurrentUserView,
 )
 
 router = DefaultRouter()
@@ -16,6 +17,7 @@ router.register(r'activity', UserActivityLogViewSet, basename='activity-log')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('me/', CurrentUserView.as_view(), name='current-user'),
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', PetsoTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
