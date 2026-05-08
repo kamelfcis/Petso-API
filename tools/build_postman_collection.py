@@ -3,6 +3,7 @@
 Outputs:
 - Petso_Postman_Collection.json — local (http://127.0.0.1:8000)
 - Petso_Postman_Collection.Production.json — https://petso-api.vercel.app
+- Petso_Postman_Collection.VPS.json — http://95.216.63.81:8000 (same requests as local; change base_url if needed)
 """
 import json
 from pathlib import Path
@@ -90,8 +91,12 @@ def folder(name, items, desc=""):
     return f
 
 
-def build_auth_items(*, production: bool):
-    """Register, login, refresh. New accounts are verified at signup (no OTP / verify-email)."""
+def build_auth_items(*, variant: str):
+    """Register, login, refresh. New accounts are verified at signup (no OTP / verify-email).
+
+    variant: local | production | vps
+    """
+    include_vercel_demo_admin = variant == "production"
     items = [
         req(
             "Register - Farmer (مربي)",
@@ -163,7 +168,7 @@ def build_auth_items(*, production: bool):
         "} catch (e) {}",
     ]
     login_items = []
-    if production:
+    if include_vercel_demo_admin:
         login_items.append(
             req(
                 "Login - Admin (bundled Vercel demo)",
@@ -175,6 +180,21 @@ def build_auth_items(*, production: bool):
                 desc=(
                     "Superuser shipped in `deployment/petso.sqlite3` when `DATABASE_URL` is unset. "
                     "Same `admin_email` / `admin_password` work for Django `/admin/`."
+                ),
+            )
+        )
+    elif variant == "vps":
+        login_items.append(
+            req(
+                "Login - Admin (VPS staff)",
+                "POST",
+                "/auth/login/",
+                {"email": "{{admin_email}}", "password": "{{admin_password}}"},
+                auth="noauth",
+                tests=jwt_tests_admin,
+                desc=(
+                    "Set `admin_email` and `admin_password` collection variables to match your VPS "
+                    "`createsuperuser` account. Needed for staff-only routes (e.g. bulk delete products/categories)."
                 ),
             )
         )
@@ -232,8 +252,8 @@ def build_auth_items(*, production: bool):
     return items
 
 
-def readme_folder(*, production: bool):
-    if production:
+def readme_folder(*, variant: str):
+    if variant == "production":
         desc = (
             "**Production (Vercel)** — المتغير `base_url` الافتراضي: `https://petso-api.vercel.app`\n"
             "1. التسجيل يفعّل الحساب مباشرة (`is_verified`) — لا يوجد verify-email / OTP.\n"
@@ -241,6 +261,16 @@ def readme_folder(*, production: bool):
             "3. حساب الـ demo المضمّن مع SQLite: `admin_email` / `admin_password` (انظر `deployment/README.md`) — نفسها لـ `/admin/`.\n"
             "4. حدّث `category_id`, `product_id`, … من ردود الطلبات.\n"
             "5. حذف جماعي (staff): `DELETE .../ecommerce/products/delete-all/` و `.../categories/delete-all/` — يحتاج مستخدم **`is_staff`** (مثلاً تسجيل دخول Admin المضمّن أو superuser).\n\n"
+            "**Variables:** base_url, admin_*, role emails/passwords, tokens, *_id"
+        )
+    elif variant == "vps":
+        desc = (
+            "**VPS server** — default `base_url`: `http://95.216.63.81:8000` (edit the collection variable if your host/port differs).\n"
+            "1. Accounts are pre-verified at signup (`is_verified`) — no OTP.\n"
+            "2. Register test users → Login → run folders in order; update `*_id` variables from responses.\n"
+            "3. Set `admin_email` / `admin_password` to match your VPS `createsuperuser` for staff-only routes (bulk delete, etc.).\n"
+            "4. Public (no auth): `GET /api/farmers/profile/all/`, `GET /api/vets/profiles/all/`, `GET /api/medical/slots/`, etc.\n"
+            "5. Login returns `user_id`, `email`, `name`, `role` alongside JWT tokens.\n\n"
             "**Variables:** base_url, admin_*, role emails/passwords, tokens, *_id"
         )
     else:
@@ -270,8 +300,13 @@ def readme_folder(*, production: bool):
     }
 
 
-def collection_variables(*, production: bool):
-    base_url = "https://petso-api.vercel.app" if production else "http://127.0.0.1:8000"
+def collection_variables(*, variant: str):
+    if variant == "production":
+        base_url = "https://petso-api.vercel.app"
+    elif variant == "vps":
+        base_url = "http://95.216.63.81:8000"
+    else:
+        base_url = "http://127.0.0.1:8000"
     vars_ = [
         {"key": "base_url", "value": base_url, "type": "string"},
         {"key": "farmer_email", "value": "farmer.demo@petso.local", "type": "string"},
@@ -281,11 +316,15 @@ def collection_variables(*, production: bool):
         {"key": "company_email", "value": "company.demo@petso.local", "type": "string"},
         {"key": "company_password", "value": "DemoPass123!", "type": "string"},
     ]
-    if production:
+    if variant in ("production", "vps"):
+        if variant == "production":
+            admin_email, admin_pw = "admin@petso.local", "PetsoVercel2026!"
+        else:
+            admin_email, admin_pw = "admin@petso.com", ""
         vars_.extend(
             [
-                {"key": "admin_email", "value": "admin@petso.local", "type": "string"},
-                {"key": "admin_password", "value": "PetsoVercel2026!", "type": "string"},
+                {"key": "admin_email", "value": admin_email, "type": "string"},
+                {"key": "admin_password", "value": admin_pw, "type": "string"},
             ]
         )
     vars_.extend(
@@ -880,28 +919,48 @@ def append_shared_api_folders(items):
 def main():
     root = Path(__file__).resolve().parent.parent
     builds = [
-        (
-            False,
-            "Petso_Postman_Collection.json",
-            "Petso - Full Scenario (local)",
-            "Postman collection for local dev at http://127.0.0.1:8000 (signup is pre-verified).\n"
-            "**Roles:** farmer | vet | company | admin\n"
-            "Run `python tools/build_postman_collection.py` to regenerate.",
-        ),
-        (
-            True,
-            "Petso_Postman_Collection.Production.json",
-            "Petso - Production (Vercel)",
-            "Postman collection for **https://petso-api.vercel.app** (signup is pre-verified).\n"
-            "**Roles:** farmer | vet | company | admin\n"
-            "Run `python tools/build_postman_collection.py` to regenerate.",
-        ),
+        {
+            "variant": "local",
+            "filename": "Petso_Postman_Collection.json",
+            "title": "Petso - Full Scenario (local)",
+            "description": (
+                "Postman collection for local dev at http://127.0.0.1:8000 (signup is pre-verified).\n"
+                "**Roles:** farmer | vet | company | admin\n"
+                "Run `python tools/build_postman_collection.py` to regenerate."
+            ),
+        },
+        {
+            "variant": "production",
+            "filename": "Petso_Postman_Collection.Production.json",
+            "title": "Petso - Production (Vercel)",
+            "description": (
+                "Postman collection for **https://petso-api.vercel.app** (signup is pre-verified).\n"
+                "**Roles:** farmer | vet | company | admin\n"
+                "Run `python tools/build_postman_collection.py` to regenerate."
+            ),
+        },
+        {
+            "variant": "vps",
+            "filename": "Petso_Postman_Collection.VPS.json",
+            "title": "Petso - VPS (95.216.63.81)",
+            "description": (
+                "Full Petso API collection. Default **`base_url`**: `http://95.216.63.81:8000` — "
+                "edit the collection variable if your server IP or port changes.\n\n"
+                "Includes: auth (`/auth/me/`, login with `user_id`), public farmers/vets lists, "
+                "e-commerce (form-data products, bulk delete staff), medical slots, social like, chat, AI, system.\n"
+                "Run `python tools/build_postman_collection.py` to regenerate."
+            ),
+        },
     ]
 
-    for production, filename, title, description in builds:
+    for b in builds:
+        variant = b["variant"]
+        filename = b["filename"]
+        title = b["title"]
+        description = b["description"]
         items = []
-        items.append(readme_folder(production=production))
-        auth_items = build_auth_items(production=production)
+        items.append(readme_folder(variant=variant))
+        auth_items = build_auth_items(variant=variant)
         items.append(
             folder(
                 "01 - Authentication",
@@ -921,7 +980,7 @@ def main():
                 "type": "bearer",
                 "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}],
             },
-            "variable": collection_variables(production=production),
+            "variable": collection_variables(variant=variant),
             "item": items,
         }
 

@@ -1,0 +1,2065 @@
+{
+  "info": {
+    "name": "Petso - VPS (95.216.63.81)",
+    "description": "Full Petso API collection. Default **`base_url`**: `http://95.216.63.81:8000` — edit the collection variable if your server IP or port changes.\n\nIncludes: auth (`/auth/me/`, login with `user_id`), public farmers/vets lists, e-commerce (form-data products, bulk delete staff), medical slots, social like, chat, AI, system.\nRun `python tools/build_postman_collection.py` to regenerate.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://95.216.63.81:8000",
+      "type": "string"
+    },
+    {
+      "key": "farmer_email",
+      "value": "farmer.demo@petso.local",
+      "type": "string"
+    },
+    {
+      "key": "farmer_password",
+      "value": "DemoPass123!",
+      "type": "string"
+    },
+    {
+      "key": "vet_email",
+      "value": "vet.demo@petso.local",
+      "type": "string"
+    },
+    {
+      "key": "vet_password",
+      "value": "DemoPass123!",
+      "type": "string"
+    },
+    {
+      "key": "company_email",
+      "value": "company.demo@petso.local",
+      "type": "string"
+    },
+    {
+      "key": "company_password",
+      "value": "DemoPass123!",
+      "type": "string"
+    },
+    {
+      "key": "admin_email",
+      "value": "admin@petso.com",
+      "type": "string"
+    },
+    {
+      "key": "admin_password",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "company_user_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "company_profile_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "category_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "product_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "farmer_profile_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "flock_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "vet_profile_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "farmer_user_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "vet_user_id",
+      "value": "2",
+      "type": "string"
+    },
+    {
+      "key": "slot_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "appointment_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "post_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "chat_id",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - README",
+      "item": [
+        {
+          "name": "Overview",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/docs/",
+            "description": "**VPS server** — default `base_url`: `http://95.216.63.81:8000` (edit the collection variable if your host/port differs).\n1. Accounts are pre-verified at signup (`is_verified`) — no OTP.\n2. Register test users → Login → run folders in order; update `*_id` variables from responses.\n3. Set `admin_email` / `admin_password` to match your VPS `createsuperuser` for staff-only routes (bulk delete, etc.).\n4. Public (no auth): `GET /api/farmers/profile/all/`, `GET /api/vets/profiles/all/`, `GET /api/medical/slots/`, etc.\n5. Login returns `user_id`, `email`, `name`, `role` alongside JWT tokens.\n\n**Variables:** base_url, admin_*, role emails/passwords, tokens, *_id"
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 - Authentication",
+      "item": [
+        {
+          "name": "Register - Farmer (مربي)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/register/",
+            "description": "Creates farmer account; `is_verified` is true — login with JWT immediately.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{farmer_email}}\",\n  \"password\": \"{{farmer_password}}\",\n  \"name\": \"Farmer Demo\",\n  \"phone_number\": \"+201000000001\",\n  \"role\": \"farmer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Register - Vet (طبيب)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/register/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{vet_email}}\",\n  \"password\": \"{{vet_password}}\",\n  \"name\": \"Vet Demo\",\n  \"phone_number\": \"+201000000002\",\n  \"role\": \"vet\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Register - Company (شركة)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/register/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{company_email}}\",\n  \"password\": \"{{company_password}}\",\n  \"name\": \"Company Owner\",\n  \"phone_number\": \"+201000000003\",\n  \"role\": \"company\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Login - Admin (VPS staff)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login/",
+            "description": "Set `admin_email` and `admin_password` collection variables to match your VPS `createsuperuser` account. Needed for staff-only routes (e.g. bulk delete products/categories).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "try { var j = pm.response.json();",
+                  "if (j.access) pm.collectionVariables.set(\"access_token\", j.access);",
+                  "if (j.refresh) pm.collectionVariables.set(\"refresh_token\", j.refresh);",
+                  "if (j.user_id) pm.collectionVariables.set(\"admin_user_id\", String(j.user_id));",
+                  "} catch (e) {}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login - Farmer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{farmer_email}}\",\n  \"password\": \"{{farmer_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "try { var j = pm.response.json();",
+                  "if (j.access) pm.collectionVariables.set(\"access_token\", j.access);",
+                  "if (j.refresh) pm.collectionVariables.set(\"refresh_token\", j.refresh);",
+                  "if (j.user_id) pm.collectionVariables.set(\"farmer_user_id\", String(j.user_id));",
+                  "} catch (e) {}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login - Vet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{vet_email}}\",\n  \"password\": \"{{vet_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "try { var j = pm.response.json();",
+                  "if (j.access) pm.collectionVariables.set(\"access_token\", j.access);",
+                  "if (j.refresh) pm.collectionVariables.set(\"refresh_token\", j.refresh);",
+                  "if (j.user_id) pm.collectionVariables.set(\"vet_user_id\", String(j.user_id));",
+                  "} catch (e) {}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login - Company",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{company_email}}\",\n  \"password\": \"{{company_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "try { var j = pm.response.json();",
+                  "if (j.access) pm.collectionVariables.set(\"access_token\", j.access);",
+                  "if (j.refresh) pm.collectionVariables.set(\"refresh_token\", j.refresh);",
+                  "if (j.user_id) pm.collectionVariables.set(\"company_user_id\", String(j.user_id));",
+                  "} catch (e) {}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/token/refresh/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "try { var j = pm.response.json();",
+                  "if (j.access) pm.collectionVariables.set(\"access_token\", j.access);",
+                  "} catch (e) {}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get current user (me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/auth/me/",
+            "description": "Returns the logged-in user's profile: id, email, name, phone_number, role, is_verified, date_joined. Requires Bearer token (any role).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "description": "JWT: Login requests save access_token and refresh_token to collection variables."
+    },
+    {
+      "name": "02 - Farmer (login as farmer)",
+      "item": [
+        {
+          "name": "List all farmers (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/farmers/profile/all/",
+            "description": "No authentication needed. Returns all farmer profiles.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "List farmer profiles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/farmers/profile/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create farmer profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/farmers/profile/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"farm_name\": \"Demo Poultry Farm\",\n  \"farm_location\": \"Giza, Egypt\",\n  \"farm_address\": \"Plot 12, Road 9\",\n  \"farm_area\": \"5.50\",\n  \"flock_size\": 500,\n  \"farm_type\": \"Broiler\",\n  \"gps_lat\": \"30.0444\",\n  \"gps_long\": \"31.2357\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"farmer_profile_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List flocks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/farmers/flocks/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create flock",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/farmers/flocks/",
+            "description": "As **farmer**, omit `farmer` — the server assigns your profile from the JWT. As **admin**, include `farmer` (FarmerProfile PK). Run **Create farmer profile** first if new user.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"flock_name\": \"Batch A-2026\",\n  \"breed\": \"Ross 308\",\n  \"hatch_date\": \"2026-01-15\",\n  \"current_age_weeks\": 8,\n  \"total_count\": 5000,\n  \"mortality_count\": 12,\n  \"feed_consumption\": \"120 kg/day\",\n  \"notes\": \"Healthy flock\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"flock_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 - Vet (login as vet)",
+      "item": [
+        {
+          "name": "List all vets (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/vets/profiles/all/",
+            "description": "No authentication needed. Returns all vet profiles.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "List vet profiles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/vets/profiles/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  var list = j.results !== undefined ? j.results : j;",
+                  "  if (Array.isArray(list) && list.length && list[0].id) {",
+                  "    pm.collectionVariables.set(\"vet_profile_id\", String(list[0].id));",
+                  "  }",
+                  "} catch (e) {}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create vet profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/vets/profiles/",
+            "description": "If 400: backend may need perform_create to bind user to VetProfile.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"license_number\": \"VET-LIC-{{$timestamp}}\",\n  \"specialties\": \"Poultry, Avian medicine\",\n  \"qualifications\": \"DVM, MSc Poultry Health\",\n  \"clinic_address\": \"15 Clinic St, Cairo\",\n  \"years_of_experience\": 7,\n  \"available\": true,\n  \"rating\": \"0.00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List vet reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/vets/reviews/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create vet review (farmer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/vets/reviews/",
+            "description": "Login as farmer; set vet_profile_id and farmer_profile_id.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vet\": \"{{vet_profile_id}}\",\n  \"farmer\": \"{{farmer_profile_id}}\",\n  \"rating\": 5,\n  \"review_text\": \"Excellent service.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Company (login as company or admin)",
+      "item": [
+        {
+          "name": "List companies",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/companies/companies/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create company profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/companies/companies/",
+            "description": "company_user_id: Django User PK for role=company (from admin or shell).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": \"{{company_user_id}}\",\n  \"name\": \"Petso Feed Co.\",\n  \"description\": \"Quality poultry feed supplier\",\n  \"website\": \"https://petso-feed.example.com\",\n  \"contact_email\": \"{{company_email}}\",\n  \"contact_phone\": \"+201000000099\",\n  \"business_registration\": \"BR-2026-001\",\n  \"logo_url\": \"https://placehold.co/120x120/png\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"company_profile_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List company analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/companies/analytics/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - E-commerce",
+      "item": [
+        {
+          "name": "List categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/ecommerce/categories/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/ecommerce/categories/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Feed & Nutrition\",\n  \"description\": \"Feeds and supplements\",\n  \"parent\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"category_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/ecommerce/products/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  var list = j.results !== undefined ? j.results : j;",
+                  "  if (Array.isArray(list) && list.length && list[0].id) {",
+                  "    pm.collectionVariables.set(\"product_id\", String(list[0].id));",
+                  "  }",
+                  "} catch (e) {}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Search products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/ecommerce/products/?search=feed",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Bulk delete — staff JWT",
+          "item": [
+            {
+              "name": "Delete all products",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/ecommerce/products/delete-all/",
+                "description": "**DRF `IsAdminUser`** — Django user must have **`is_staff=True`**. Use **Login - Admin (bundled Vercel demo)** on production, or locally run `python manage.py createsuperuser` and **Login** with that email — API Register with `role=admin` does **not** set `is_staff`.\n\n`DELETE {{base_url}}/api/ecommerce/products/delete-all/` — removes every product; images, reviews, cart line items CASCADE. Categories unchanged.\n\nResponse: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all products: deleted count =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete all categories",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/ecommerce/categories/delete-all/",
+                "description": "Same **staff JWT** as **Delete all products**.\n\n`DELETE {{base_url}}/api/ecommerce/categories/delete-all/` — removes every category; products in those categories CASCADE.\n\nResponse: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all categories: deleted count =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ],
+          "description": "Destructive admin endpoints. Bearer token must be from a **staff** user (`is_staff=True`). Order: if you only want products removed, call **Delete all products** only; deleting all categories also wipes their products."
+        },
+        {
+          "name": "Create product",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/ecommerce/products/",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "company",
+                  "type": "text",
+                  "value": "{{company_profile_id}}"
+                },
+                {
+                  "key": "category",
+                  "type": "text",
+                  "value": "{{category_id}}"
+                },
+                {
+                  "key": "sku",
+                  "type": "text",
+                  "value": "SKU-{{$timestamp}}"
+                },
+                {
+                  "key": "name",
+                  "type": "text",
+                  "value": "Starter Feed 25kg"
+                },
+                {
+                  "key": "description",
+                  "type": "text",
+                  "value": "High protein starter for broilers"
+                },
+                {
+                  "key": "unit_price",
+                  "type": "text",
+                  "value": "450.00"
+                },
+                {
+                  "key": "currency",
+                  "type": "text",
+                  "value": "EGP"
+                },
+                {
+                  "key": "stock",
+                  "type": "text",
+                  "value": "200"
+                },
+                {
+                  "key": "is_active",
+                  "type": "text",
+                  "value": "true"
+                },
+                {
+                  "key": "requires_prescription",
+                  "type": "text",
+                  "value": "false"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "description": "Body **form-data**: product fields as **Text**; `image` = **File** (Select Files). Same pattern as **Create post**. Leave extra headers empty. Optional: omit `image` if you add images later via JSON or product-images.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"product_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create product (JSON + remote images)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/ecommerce/products/",
+            "description": "Alternative: JSON with `images_data` (remote_image_url per row). For a local file use **Create product** (form-data + `image` File).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company\": \"{{company_profile_id}}\",\n  \"category\": \"{{category_id}}\",\n  \"sku\": \"SKU-JSON-{{$timestamp}}\",\n  \"name\": \"Starter Feed 25kg (remote image)\",\n  \"description\": \"High protein starter for broilers\",\n  \"unit_price\": \"450.00\",\n  \"currency\": \"EGP\",\n  \"stock\": 200,\n  \"is_active\": true,\n  \"requires_prescription\": false,\n  \"images_data\": [\n    {\n      \"remote_image_url\": \"https://placehold.co/200x200/png\",\n      \"alt_text\": \"Main\",\n      \"position\": 0\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"product_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List product images",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/ecommerce/product-images/?product={{product_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List my cart",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/ecommerce/cart/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cart - Add item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/ecommerce/cart/add_item/",
+            "description": "Requires authenticated user (e.g. farmer).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": \"{{product_id}}\",\n  \"quantity\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "description": "Typical order: Login Company → Create company profile → Create category → **Create product** (form-data + `image` File), or JSON alternate / POST /ecommerce/product-images/. Then Login Farmer → Cart add_item. Folder **Bulk delete — staff JWT**: `DELETE .../products/delete-all/` and `DELETE .../categories/delete-all/` (needs `is_staff`; see request descriptions)."
+    },
+    {
+      "name": "06 - Orders",
+      "item": [
+        {
+          "name": "List orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/orders/orders/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/orders/orders/",
+            "description": "Serializer may mark total as read-only; adjust backend if create fails.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company\": \"{{company_profile_id}}\",\n  \"shipping_address\": \"Farm gate, Giza\",\n  \"total\": \"900.00\",\n  \"payment_method\": \"Wallet\",\n  \"prescription_id\": null,\n  \"delivery_date\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List order status history",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/orders/status-history/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Payments",
+      "item": [
+        {
+          "name": "List my wallet",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/payments/wallet/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/payments/transactions/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Medical",
+      "item": [
+        {
+          "name": "List all slots (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/medical/slots/",
+            "description": "No auth required. Filter by vet: `?vet={{vet_profile_id}}`. Filter available: `?is_available=true`.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "List vet's own slots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/medical/slots/?vet={{vet_profile_id}}",
+            "description": "Filter slots for a specific vet. No auth required.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Add slot (vet only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/medical/slots/",
+            "description": "Login as **vet**. `vet` is assigned automatically from JWT — do not include it in body. Run **Create vet profile** first.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-06-10\",\n  \"start_time\": \"09:00:00\",\n  \"end_time\": \"09:30:00\",\n  \"is_available\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"slot_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update slot availability",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/medical/slots/{{slot_id}}/",
+            "description": "Vet marks their slot as unavailable (or any field update).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_available\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List appointments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/medical/appointments/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/medical/appointments/",
+            "description": "Set slot_id from **Add slot** or **List all slots**.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"farmer\": \"{{farmer_profile_id}}\",\n  \"vet\": \"{{vet_profile_id}}\",\n  \"slot\": \"{{slot_id}}\",\n  \"status\": \"scheduled\",\n  \"scheduled_start\": \"2026-06-10T09:00:00Z\",\n  \"scheduled_end\": \"2026-06-10T09:30:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"appointment_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List prescriptions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/medical/prescriptions/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create prescription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/medical/prescriptions/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vet\": \"{{vet_profile_id}}\",\n  \"farmer\": \"{{farmer_profile_id}}\",\n  \"flock\": \"{{flock_id}}\",\n  \"diagnosis\": \"Respiratory stress\",\n  \"prescription_text\": \"Antibiotic course per label\",\n  \"status\": \"active\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - Social",
+      "item": [
+        {
+          "name": "List posts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/social/posts/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create post",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/social/posts/",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "content",
+                  "type": "text",
+                  "value": "Great harvest this week!"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "description": "Default flow: Body **form-data**. `content` = **Text**; `image` = **File** (Select Files). Same pattern as **Create product**. If Postman shows a **yellow warning** on the filename, re-pick the file. Leave headers empty. On VPS, nginx: `client_max_body_size 10m;` for `/api/`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"post_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create post (JSON + remote image URL)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/social/posts/",
+            "description": "Alternative: JSON with `remote_image_url` (server downloads). For a **local file**, use **Create post** (form-data + `image` File).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Great harvest this week!\",\n  \"remote_image_url\": \"https://placehold.co/600x400/png\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"post_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create post (image base64 JSON)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/social/posts/",
+            "description": "Optional fallback only if multipart is blocked. Prefer **Create post** (form-data + File).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"1x1 PNG via image_base64\",\n  \"image_base64\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"post_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Like / Unlike post",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/social/posts/{{post_id}}/like/",
+            "description": "Toggle like on a post. First call **likes** the post; second call **unlikes** it. Response: `{ \"liked\": true/false, \"likes_count\": <int> }`. Requires Bearer token. The post list also returns `is_liked_by_me` and `likes_count`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List comments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/social/comments/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/social/comments/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"post\": \"{{post_id}}\",\n  \"content\": \"Congrats!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Chat",
+      "item": [
+        {
+          "name": "List chats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/chat/chats/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create chat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/chat/chats/",
+            "description": "User PK integers from Django admin / shell.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user1\": \"{{farmer_user_id}}\",\n  \"user2\": \"{{vet_user_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/chat/messages/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/chat/messages/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chat\": \"{{chat_id}}\",\n  \"message\": \"Hello from Postman\",\n  \"is_read\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 - AI",
+      "item": [
+        {
+          "name": "List AI cases",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/ai/cases/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create AI case",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/ai/cases/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Title\": \"Sick broiler batch\",\n  \"symptoms\": \"Coughing, reduced feed intake\",\n  \"images\": [],\n  \"animal_type\": \"broiler\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 - System & schema",
+      "item": [
+        {
+          "name": "List notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/system/notifications/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/system/notifications/",
+            "description": "Set farmer_user_id to the authenticated user's PK (Django User id).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": \"{{farmer_user_id}}\",\n  \"type\": \"system\",\n  \"title\": \"Welcome\",\n  \"body\": \"Your account is ready.\",\n  \"is_read\": false,\n  \"priority\": \"medium\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Future features (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/system/future-features/",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "OpenAPI schema",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/schema/",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 - Admin API",
+      "item": [
+        {
+          "name": "List users (admin only)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/auth/profile/",
+            "description": "Requires is_staff user token.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
