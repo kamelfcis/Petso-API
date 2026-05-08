@@ -335,15 +335,24 @@ def collection_variables(*, variant: str):
             {"key": "company_profile_id", "value": "1", "type": "string"},
             {"key": "category_id", "value": "1", "type": "string"},
             {"key": "product_id", "value": "1", "type": "string"},
+            {"key": "product_image_id", "value": "1", "type": "string"},
+            {"key": "cart_id", "value": "1", "type": "string"},
             {"key": "farmer_profile_id", "value": "1", "type": "string"},
             {"key": "flock_id", "value": "1", "type": "string"},
             {"key": "vet_profile_id", "value": "1", "type": "string"},
+            {"key": "vet_review_id", "value": "1", "type": "string"},
             {"key": "farmer_user_id", "value": "1", "type": "string"},
             {"key": "vet_user_id", "value": "2", "type": "string"},
             {"key": "slot_id", "value": "1", "type": "string"},
             {"key": "appointment_id", "value": "1", "type": "string"},
+            {"key": "prescription_id", "value": "1", "type": "string"},
+            {"key": "order_id", "value": "1", "type": "string"},
             {"key": "post_id", "value": "1", "type": "string"},
+            {"key": "comment_id", "value": "1", "type": "string"},
             {"key": "chat_id", "value": "1", "type": "string"},
+            {"key": "message_id", "value": "1", "type": "string"},
+            {"key": "case_id", "value": "1", "type": "string"},
+            {"key": "user_id", "value": "1", "type": "string"},
         ]
     )
     return vars_
@@ -407,6 +416,10 @@ def append_shared_api_folders(items):
                 "}",
             ],
         ),
+        req("Delete farmer profile", "DELETE", "/farmers/profile/{{farmer_profile_id}}/", None,
+            desc="DELETE /api/farmers/profile/{{farmer_profile_id}}/ — 204 No Content."),
+        req("Delete flock", "DELETE", "/farmers/flocks/{{flock_id}}/", None,
+            desc="DELETE /api/farmers/flocks/{{flock_id}}/ — 204 No Content."),
     ]
     items.append(folder("02 - Farmer (login as farmer)", farmer_items))
 
@@ -463,7 +476,17 @@ def append_shared_api_folders(items):
                 "review_text": "Excellent service.",
             },
             desc="Login as farmer; set vet_profile_id and farmer_profile_id.",
+            tests=[
+                "if (pm.response.code === 201) {",
+                "  var j = pm.response.json();",
+                '  if (j.id) pm.collectionVariables.set("vet_review_id", String(j.id));',
+                "}",
+            ],
         ),
+        req("Delete vet profile", "DELETE", "/vets/profiles/{{vet_profile_id}}/", None,
+            desc="DELETE /api/vets/profiles/{{vet_profile_id}}/ — 204 No Content."),
+        req("Delete vet review", "DELETE", "/vets/reviews/{{vet_review_id}}/", None,
+            desc="DELETE /api/vets/reviews/{{vet_review_id}}/ — 204 No Content."),
     ]
     items.append(folder("03 - Vet (login as vet)", vet_items))
 
@@ -492,6 +515,8 @@ def append_shared_api_folders(items):
             ],
         ),
         req("List company analytics", "GET", "/companies/analytics/", None),
+        req("Delete company", "DELETE", "/companies/companies/{{company_profile_id}}/", None,
+            desc="DELETE /api/companies/companies/{{company_profile_id}}/ — 204 No Content."),
     ]
     items.append(folder("04 - Company (login as company or admin)", company_items))
 
@@ -659,6 +684,14 @@ def append_shared_api_folders(items):
             {"product_id": "{{product_id}}", "quantity": 2},
             desc="Requires authenticated user (e.g. farmer).",
         ),
+        req("Delete category", "DELETE", "/ecommerce/categories/{{category_id}}/", None,
+            desc="DELETE /api/ecommerce/categories/{{category_id}}/ — 204 No Content."),
+        req("Delete product", "DELETE", "/ecommerce/products/{{product_id}}/", None,
+            desc="DELETE /api/ecommerce/products/{{product_id}}/ — 204 No Content. Images CASCADE."),
+        req("Delete product image", "DELETE", "/ecommerce/product-images/{{product_image_id}}/", None,
+            desc="DELETE /api/ecommerce/product-images/{{product_image_id}}/ — 204 No Content."),
+        req("Delete cart", "DELETE", "/ecommerce/cart/{{cart_id}}/", None,
+            desc="DELETE /api/ecommerce/cart/{{cart_id}}/ — 204 No Content. Cart items CASCADE."),
     ]
     items.append(
         folder(
@@ -688,6 +721,13 @@ def append_shared_api_folders(items):
             desc="Serializer may mark total as read-only; adjust backend if create fails.",
         ),
         req("List order status history", "GET", "/orders/status-history/", None),
+        req("Delete order", "DELETE", "/orders/orders/{{order_id}}/", None,
+            desc="DELETE /api/orders/orders/{{order_id}}/ — 204 No Content.",
+            tests=[
+                "if (pm.response.code === 204) {",
+                "  console.log('Order deleted.');",
+                "}",
+            ]),
     ]
     items.append(folder("06 - Orders", order_items))
 
@@ -776,7 +816,19 @@ def append_shared_api_folders(items):
                 "prescription_text": "Antibiotic course per label",
                 "status": "active",
             },
+            tests=[
+                "if (pm.response.code === 201) {",
+                "  var j = pm.response.json();",
+                '  if (j.id) pm.collectionVariables.set("prescription_id", String(j.id));',
+                "}",
+            ],
         ),
+        req("Delete slot", "DELETE", "/medical/slots/{{slot_id}}/", None,
+            desc="DELETE /api/medical/slots/{{slot_id}}/ — 204 No Content."),
+        req("Delete appointment", "DELETE", "/medical/appointments/{{appointment_id}}/", None,
+            desc="DELETE /api/medical/appointments/{{appointment_id}}/ — 204 No Content."),
+        req("Delete prescription", "DELETE", "/medical/prescriptions/{{prescription_id}}/", None,
+            desc="DELETE /api/medical/prescriptions/{{prescription_id}}/ — 204 No Content."),
     ]
     items.append(folder("08 - Medical", med_items))
 
@@ -856,7 +908,17 @@ def append_shared_api_folders(items):
             "POST",
             "/social/comments/",
             {"post": "{{post_id}}", "content": "Congrats!"},
+            tests=[
+                "if (pm.response.code === 201) {",
+                "  var j = pm.response.json();",
+                '  if (j.id) pm.collectionVariables.set("comment_id", String(j.id));',
+                "}",
+            ],
         ),
+        req("Delete post", "DELETE", "/social/posts/{{post_id}}/", None,
+            desc="DELETE /api/social/posts/{{post_id}}/ — 204 No Content. Comments and likes CASCADE."),
+        req("Delete comment", "DELETE", "/social/comments/{{comment_id}}/", None,
+            desc="DELETE /api/social/comments/{{comment_id}}/ — 204 No Content."),
     ]
     items.append(folder("09 - Social", soc_items))
 
@@ -875,7 +937,17 @@ def append_shared_api_folders(items):
             "POST",
             "/chat/messages/",
             {"chat": "{{chat_id}}", "message": "Hello from Postman", "is_read": False},
+            tests=[
+                "if (pm.response.code === 201) {",
+                "  var j = pm.response.json();",
+                '  if (j.id) pm.collectionVariables.set("message_id", String(j.id));',
+                "}",
+            ],
         ),
+        req("Delete chat", "DELETE", "/chat/chats/{{chat_id}}/", None,
+            desc="DELETE /api/chat/chats/{{chat_id}}/ — 204 No Content. Messages CASCADE."),
+        req("Delete message", "DELETE", "/chat/messages/{{message_id}}/", None,
+            desc="DELETE /api/chat/messages/{{message_id}}/ — 204 No Content."),
     ]
     items.append(folder("10 - Chat", chat_items))
 
@@ -891,7 +963,15 @@ def append_shared_api_folders(items):
                 "images": [],
                 "animal_type": "broiler",
             },
+            tests=[
+                "if (pm.response.code === 201) {",
+                "  var j = pm.response.json();",
+                '  if (j.id) pm.collectionVariables.set("case_id", String(j.id));',
+                "}",
+            ],
         ),
+        req("Delete AI case", "DELETE", "/ai/cases/{{case_id}}/", None,
+            desc="DELETE /api/ai/cases/{{case_id}}/ — 204 No Content."),
     ]
     items.append(folder("11 - AI", ai_items))
 
@@ -924,6 +1004,12 @@ def append_shared_api_folders(items):
             None,
             desc="Requires is_staff user token.",
         ),
+        req("Delete user", "DELETE", "/auth/profile/{{user_id}}/", None,
+            desc="DELETE /api/auth/profile/{{user_id}}/ — 204 No Content. Staff only. Linked farmer/vet/company profiles CASCADE."),
+        req("Delete notification preference", "DELETE", "/auth/notifications/{{user_id}}/", None,
+            desc="DELETE /api/auth/notifications/{{user_id}}/ — 204 No Content."),
+        req("Delete activity log", "DELETE", "/auth/activity/{{user_id}}/", None,
+            desc="DELETE /api/auth/activity/{{user_id}}/ — 204 No Content."),
     ]
     items.append(folder("13 - Admin API", admin_items))
 

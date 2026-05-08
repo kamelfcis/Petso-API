@@ -81,6 +81,16 @@
       "type": "string"
     },
     {
+      "key": "product_image_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "cart_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
       "key": "farmer_profile_id",
       "value": "1",
       "type": "string"
@@ -92,6 +102,11 @@
     },
     {
       "key": "vet_profile_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "vet_review_id",
       "value": "1",
       "type": "string"
     },
@@ -116,12 +131,42 @@
       "type": "string"
     },
     {
+      "key": "prescription_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "order_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
       "key": "post_id",
       "value": "1",
       "type": "string"
     },
     {
+      "key": "comment_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
       "key": "chat_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "message_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "case_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
       "value": "1",
       "type": "string"
     }
@@ -543,6 +588,44 @@
               }
             }
           ]
+        },
+        {
+          "name": "Delete farmer profile",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/farmers/profile/{{farmer_profile_id}}/",
+            "description": "DELETE /api/farmers/profile/{{farmer_profile_id}}/ — 204 No Content.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete flock",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/farmers/flocks/{{flock_id}}/",
+            "description": "DELETE /api/farmers/flocks/{{flock_id}}/ — 204 No Content.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
         }
       ]
     },
@@ -678,6 +761,58 @@
                 }
               ]
             }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"vet_review_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete vet profile",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/vets/profiles/{{vet_profile_id}}/",
+            "description": "DELETE /api/vets/profiles/{{vet_profile_id}}/ — 204 No Content.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete vet review",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/vets/reviews/{{vet_review_id}}/",
+            "description": "DELETE /api/vets/reviews/{{vet_review_id}}/ — 204 No Content.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]
@@ -756,6 +891,25 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/api/companies/analytics/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete company",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/companies/companies/{{company_profile_id}}/",
+            "description": "DELETE /api/companies/companies/{{company_profile_id}}/ — 204 No Content.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1208,6 +1362,82 @@
               ]
             }
           }
+        },
+        {
+          "name": "Delete category",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/ecommerce/categories/{{category_id}}/",
+            "description": "DELETE /api/ecommerce/categories/{{category_id}}/ — 204 No Content.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete product",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/ecommerce/products/{{product_id}}/",
+            "description": "DELETE /api/ecommerce/products/{{product_id}}/ — 204 No Content. Images CASCADE.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete product image",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/ecommerce/product-images/{{product_image_id}}/",
+            "description": "DELETE /api/ecommerce/product-images/{{product_image_id}}/ — 204 No Content.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete cart",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/ecommerce/cart/{{cart_id}}/",
+            "description": "DELETE /api/ecommerce/cart/{{cart_id}}/ — 204 No Content. Cart items CASCADE.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
         }
       ],
       "description": "Typical order: Login Company → Create company profile → Create category → **Create product** (form-data + `image` File), or JSON alternate / POST /ecommerce/product-images/. Then Login Farmer → Cart add_item. Folder **Bulk delete — staff JWT**: `DELETE .../products/delete-all/` and `DELETE .../categories/delete-all/` (needs `is_staff`; see request descriptions)."
@@ -1283,6 +1513,38 @@
               ]
             }
           }
+        },
+        {
+          "name": "Delete order",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/orders/orders/{{order_id}}/",
+            "description": "DELETE /api/orders/orders/{{order_id}}/ — 204 No Content.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 204) {",
+                  "  console.log('Order deleted.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     },
@@ -1547,6 +1809,77 @@
                 }
               ]
             }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"prescription_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete slot",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/medical/slots/{{slot_id}}/",
+            "description": "DELETE /api/medical/slots/{{slot_id}}/ — 204 No Content.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete appointment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/medical/appointments/{{appointment_id}}/",
+            "description": "DELETE /api/medical/appointments/{{appointment_id}}/ — 204 No Content.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete prescription",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/medical/prescriptions/{{prescription_id}}/",
+            "description": "DELETE /api/medical/prescriptions/{{prescription_id}}/ — 204 No Content.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]
@@ -1781,6 +2114,58 @@
                 }
               ]
             }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"comment_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete post",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/social/posts/{{post_id}}/",
+            "description": "DELETE /api/social/posts/{{post_id}}/ — 204 No Content. Comments and likes CASCADE.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete comment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/social/comments/{{comment_id}}/",
+            "description": "DELETE /api/social/comments/{{comment_id}}/ — 204 No Content.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]
@@ -1887,6 +2272,58 @@
                 }
               ]
             }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"message_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete chat",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/chat/chats/{{chat_id}}/",
+            "description": "DELETE /api/chat/chats/{{chat_id}}/ — 204 No Content. Messages CASCADE.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete message",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/chat/messages/{{message_id}}/",
+            "description": "DELETE /api/chat/messages/{{message_id}}/ — 204 No Content.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]
@@ -1932,6 +2369,39 @@
                 }
               }
             },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"case_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete AI case",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/ai/cases/{{case_id}}/",
+            "description": "DELETE /api/ai/cases/{{case_id}}/ — 204 No Content.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2034,6 +2504,63 @@
             "header": [],
             "url": "{{base_url}}/api/auth/profile/",
             "description": "Requires is_staff user token.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete user",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/auth/profile/{{user_id}}/",
+            "description": "DELETE /api/auth/profile/{{user_id}}/ — 204 No Content. Staff only. Linked farmer/vet/company profiles CASCADE.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete notification preference",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/auth/notifications/{{user_id}}/",
+            "description": "DELETE /api/auth/notifications/{{user_id}}/ — 204 No Content.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete activity log",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/auth/activity/{{user_id}}/",
+            "description": "DELETE /api/auth/activity/{{user_id}}/ — 204 No Content.",
             "auth": {
               "type": "bearer",
               "bearer": [
