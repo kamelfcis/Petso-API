@@ -29,9 +29,22 @@ class AppointmentSlotSerializer(serializers.ModelSerializer):
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
+    vet_name = serializers.CharField(source="vet.user.name", read_only=True)
+    farmer_name = serializers.CharField(source="farmer.user.name", read_only=True)
+
     class Meta:
         model = Appointment
-        fields = '__all__'
+        fields = (
+            "id",
+            "farmer",
+            "farmer_name",
+            "vet",
+            "vet_name",
+            "slot",
+            "status",
+            "scheduled_start",
+            "scheduled_end",
+        )
 
 
 class AppointmentSlotViewSet(viewsets.ModelViewSet):
@@ -87,16 +100,19 @@ class AppointmentSlotViewSet(viewsets.ModelViewSet):
 
 
 class AppointmentViewSet(viewsets.ModelViewSet):
-    queryset = Appointment.objects.all()
+    queryset = Appointment.objects.select_related(
+        "vet", "vet__user", "farmer", "farmer__user", "slot"
+    )
     serializer_class = AppointmentSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
+        qs = super().get_queryset()
         if self.request.user.role == 'farmer':
-            return self.queryset.filter(farmer__user=self.request.user)
+            return qs.filter(farmer__user=self.request.user)
         elif self.request.user.role == 'vet':
-            return self.queryset.filter(vet__user=self.request.user)
-        return self.queryset
+            return qs.filter(vet__user=self.request.user)
+        return qs
 
 
 class PrescriptionViewSet(viewsets.ModelViewSet):
