@@ -950,7 +950,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/ecommerce/products/delete-all/",
-                "description": "**DRF `IsAdminUser`** — Django user must have **`is_staff=True`**. Use **Login - Admin (bundled Vercel demo)** on production, or locally run `python manage.py createsuperuser` and **Login** with that email — API Register with `role=admin` does **not** set `is_staff`.\n\n`DELETE {{base_url}}/api/ecommerce/products/delete-all/` — removes every product; images, reviews, cart line items CASCADE. Categories unchanged.\n\nResponse: `200` `{ \"deleted\": <int> }`.",
+                "description": "**DRF `IsAdminUser`** — Django user must have **`is_staff=True`**. Use **Login - Admin** or locally run `python manage.py createsuperuser`. API Register with `role=admin` does **not** set `is_staff`.\n\nRemoves every product; images, reviews, cart line items CASCADE. Categories unchanged.\n\nResponse: `200` `{ \"deleted\": <int> }`.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -983,7 +983,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/ecommerce/categories/delete-all/",
-                "description": "Same **staff JWT** as **Delete all products**.\n\n`DELETE {{base_url}}/api/ecommerce/categories/delete-all/` — removes every category; products in those categories CASCADE.\n\nResponse: `200` `{ \"deleted\": <int> }`.",
+                "description": "Removes every category; products CASCADE.\n\nResponse: `200` `{ \"deleted\": <int> }`.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -1009,9 +1009,47 @@
                   }
                 }
               ]
+            },
+            {
+              "name": "Delete all product images",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/ecommerce/product-images/delete-all/",
+                "description": "Removes every ProductImage row. Products remain.\n\nResponse: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Delete all carts",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/ecommerce/cart/delete-all/",
+                "description": "Removes every Cart (and its CartItems CASCADE).\n\nResponse: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
             }
           ],
-          "description": "Destructive admin endpoints. Bearer token must be from a **staff** user (`is_staff=True`). Order: if you only want products removed, call **Delete all products** only; deleting all categories also wipes their products."
+          "description": "Destructive admin endpoints. Bearer token must be from a **staff** user (`is_staff=True`). Order: delete products before categories to avoid CASCADE surprises."
         },
         {
           "name": "Create product",
@@ -2060,6 +2098,646 @@
           }
         }
       ]
+    },
+    {
+      "name": "14 - Admin: Delete All",
+      "item": [
+        {
+          "name": "Users",
+          "item": [
+            {
+              "name": "Delete all users",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/auth/profile/delete-all/",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/auth/profile/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.\n\n⚠️ This also deletes all linked profiles (farmer, vet, company) via CASCADE.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all users: deleted =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete all notification preferences",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/auth/notifications/delete-all/",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/auth/notifications/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all notification preferences: deleted =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete all activity logs",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/auth/activity/delete-all/",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/auth/activity/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all activity logs: deleted =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Farmers",
+          "item": [
+            {
+              "name": "Delete all farmer profiles",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/farmers/profile/delete-all/",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/farmers/profile/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all farmer profiles: deleted =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete all flocks",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/farmers/flocks/delete-all/",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/farmers/flocks/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all flocks: deleted =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Vets",
+          "item": [
+            {
+              "name": "Delete all vet profiles",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/vets/profiles/delete-all/",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/vets/profiles/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all vet profiles: deleted =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete all vet reviews",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/vets/reviews/delete-all/",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/vets/reviews/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all vet reviews: deleted =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Companies",
+          "item": [
+            {
+              "name": "Delete all companies",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/companies/companies/delete-all/",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/companies/companies/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all companies: deleted =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "E-commerce",
+          "item": [
+            {
+              "name": "Delete all products",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/ecommerce/products/delete-all/",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/ecommerce/products/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.\n\nImages, reviews, and cart items CASCADE.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all products: deleted =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete all categories",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/ecommerce/categories/delete-all/",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/ecommerce/categories/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.\n\nProducts in those categories CASCADE.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all categories: deleted =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete all product images",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/ecommerce/product-images/delete-all/",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/ecommerce/product-images/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all product images: deleted =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete all carts",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/ecommerce/cart/delete-all/",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/ecommerce/cart/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all carts: deleted =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Orders",
+          "item": [
+            {
+              "name": "Delete all orders",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/orders/orders/delete-all/",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/orders/orders/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all orders: deleted =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Medical",
+          "item": [
+            {
+              "name": "Delete all appointment slots",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/medical/slots/delete-all/",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/medical/slots/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all appointment slots: deleted =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete all appointments",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/medical/appointments/delete-all/",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/medical/appointments/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all appointments: deleted =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete all prescriptions",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/medical/prescriptions/delete-all/",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/medical/prescriptions/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all prescriptions: deleted =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Social",
+          "item": [
+            {
+              "name": "Delete all posts",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/social/posts/delete-all/",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/social/posts/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.\n\nComments and likes CASCADE.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all posts: deleted =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete all comments",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/social/comments/delete-all/",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/social/comments/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{access_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "  var j = pm.response.json();",
+                      "  console.log('Delete all comments: deleted =', j.deleted);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "description": "One `DELETE .../delete-all/` per table. All require a **staff JWT** (`is_staff=True`). Login as a superuser (`python manage.py createsuperuser`) then use **Login - Admin**.\n\n⚠️ These are **irreversible**. Use with care."
     }
   ]
 }

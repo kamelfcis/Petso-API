@@ -1,4 +1,5 @@
-from rest_framework import viewsets, permissions, generics
+from rest_framework import viewsets, permissions, generics, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -35,6 +36,13 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = (permissions.IsAdminUser,)
 
+    @action(detail=False, methods=["delete"], url_path="delete-all",
+            permission_classes=(permissions.IsAdminUser,))
+    def delete_all(self, request):
+        n = User.objects.count()
+        User.objects.all().delete()
+        return Response({"deleted": n}, status=status.HTTP_200_OK)
+
 class UserNotificationPreferenceViewSet(viewsets.ModelViewSet):
     queryset = UserNotificationPreference.objects.all()
     serializer_class = UserNotificationPreferenceSerializer
@@ -42,6 +50,13 @@ class UserNotificationPreferenceViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
+
+    @action(detail=False, methods=["delete"], url_path="delete-all",
+            permission_classes=(permissions.IsAdminUser,))
+    def delete_all(self, request):
+        n = UserNotificationPreference.objects.count()
+        UserNotificationPreference.objects.all().delete()
+        return Response({"deleted": n}, status=status.HTTP_200_OK)
 
 class UserActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = UserActivityLog.objects.all()
@@ -52,3 +67,10 @@ class UserActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
         if self.request.user.is_staff:
             return self.queryset
         return self.queryset.filter(user=self.request.user)
+
+    @action(detail=False, methods=["delete"], url_path="delete-all",
+            permission_classes=(permissions.IsAdminUser,))
+    def delete_all(self, request):
+        n = UserActivityLog.objects.count()
+        UserActivityLog.objects.all().delete()
+        return Response({"deleted": n}, status=status.HTTP_200_OK)

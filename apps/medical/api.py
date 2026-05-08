@@ -1,5 +1,7 @@
-from rest_framework import serializers, viewsets, permissions
+from rest_framework import serializers, viewsets, permissions, status
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
 from apps.vets.models import VetProfile
 from .models import ServiceRequest, Prescription, AppointmentSlot, Appointment, AppointmentStatusHistory
@@ -93,10 +95,16 @@ class AppointmentSlotViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         user = self.request.user
         if not user.is_staff and getattr(user, "role", None) == "vet":
-            # Ensure vets can only edit their own slots
             if serializer.instance.vet != VetProfile.objects.filter(user=user).first():
                 raise ValidationError({"detail": "You can only edit your own slots."})
         serializer.save()
+
+    @action(detail=False, methods=["delete"], url_path="delete-all",
+            permission_classes=(permissions.IsAdminUser,))
+    def delete_all(self, request):
+        n = AppointmentSlot.objects.count()
+        AppointmentSlot.objects.all().delete()
+        return Response({"deleted": n}, status=status.HTTP_200_OK)
 
 
 class AppointmentViewSet(viewsets.ModelViewSet):
@@ -114,6 +122,13 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             return qs.filter(vet__user=self.request.user)
         return qs
 
+    @action(detail=False, methods=["delete"], url_path="delete-all",
+            permission_classes=(permissions.IsAdminUser,))
+    def delete_all(self, request):
+        n = Appointment.objects.count()
+        Appointment.objects.all().delete()
+        return Response({"deleted": n}, status=status.HTTP_200_OK)
+
 
 class PrescriptionViewSet(viewsets.ModelViewSet):
     queryset = Prescription.objects.all()
@@ -126,3 +141,10 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
         elif self.request.user.role == 'vet':
             return self.queryset.filter(vet__user=self.request.user)
         return self.queryset
+
+    @action(detail=False, methods=["delete"], url_path="delete-all",
+            permission_classes=(permissions.IsAdminUser,))
+    def delete_all(self, request):
+        n = Prescription.objects.count()
+        Prescription.objects.all().delete()
+        return Response({"deleted": n}, status=status.HTTP_200_OK)

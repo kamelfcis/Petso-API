@@ -535,11 +535,9 @@ def append_shared_api_folders(items):
                     None,
                     desc=(
                         "**DRF `IsAdminUser`** — Django user must have **`is_staff=True`**. "
-                        "Use **Login - Admin (bundled Vercel demo)** on production, or locally run "
-                        "`python manage.py createsuperuser` and **Login** with that email — "
+                        "Use **Login - Admin** or locally run `python manage.py createsuperuser`. "
                         "API Register with `role=admin` does **not** set `is_staff`.\n\n"
-                        "`DELETE {{base_url}}/api/ecommerce/products/delete-all/` — removes every product; "
-                        "images, reviews, cart line items CASCADE. Categories unchanged.\n\n"
+                        "Removes every product; images, reviews, cart line items CASCADE. Categories unchanged.\n\n"
                         "Response: `200` `{ \"deleted\": <int> }`."
                     ),
                     tests=[
@@ -555,9 +553,7 @@ def append_shared_api_folders(items):
                     "/ecommerce/categories/delete-all/",
                     None,
                     desc=(
-                        "Same **staff JWT** as **Delete all products**.\n\n"
-                        "`DELETE {{base_url}}/api/ecommerce/categories/delete-all/` — removes every category; "
-                        "products in those categories CASCADE.\n\n"
+                        "Removes every category; products CASCADE.\n\n"
                         "Response: `200` `{ \"deleted\": <int> }`."
                     ),
                     tests=[
@@ -567,11 +563,24 @@ def append_shared_api_folders(items):
                         "}",
                     ],
                 ),
+                req(
+                    "Delete all product images",
+                    "DELETE",
+                    "/ecommerce/product-images/delete-all/",
+                    None,
+                    desc="Removes every ProductImage row. Products remain.\n\nResponse: `200` `{ \"deleted\": <int> }`.",
+                ),
+                req(
+                    "Delete all carts",
+                    "DELETE",
+                    "/ecommerce/cart/delete-all/",
+                    None,
+                    desc="Removes every Cart (and its CartItems CASCADE).\n\nResponse: `200` `{ \"deleted\": <int> }`.",
+                ),
             ],
             desc=(
                 "Destructive admin endpoints. Bearer token must be from a **staff** user (`is_staff=True`). "
-                "Order: if you only want products removed, call **Delete all products** only; "
-                "deleting all categories also wipes their products."
+                "Order: delete products before categories to avoid CASCADE surprises."
             ),
         ),
         req_formdata(
@@ -917,6 +926,80 @@ def append_shared_api_folders(items):
         ),
     ]
     items.append(folder("13 - Admin API", admin_items))
+
+    def _del_all(name, path_, desc_extra=""):
+        base_desc = (
+            f"**Staff only (`is_staff=True`).** "
+            f"`DELETE {{{{base_url}}}}/api{path_}` — deletes every row in the table. "
+            "Response: `200` `{ \"deleted\": <int> }`."
+        )
+        if desc_extra:
+            base_desc += f"\n\n{desc_extra}"
+        return req(
+            name,
+            "DELETE",
+            path_,
+            None,
+            desc=base_desc,
+            tests=[
+                "if (pm.response.code === 200) {",
+                "  var j = pm.response.json();",
+                f"  console.log('{name}: deleted =', j.deleted);",
+                "}",
+            ],
+        )
+
+    delete_all_items = [
+        folder("Users", [
+            _del_all("Delete all users", "/auth/profile/delete-all/",
+                     "⚠️ This also deletes all linked profiles (farmer, vet, company) via CASCADE."),
+            _del_all("Delete all notification preferences", "/auth/notifications/delete-all/"),
+            _del_all("Delete all activity logs", "/auth/activity/delete-all/"),
+        ]),
+        folder("Farmers", [
+            _del_all("Delete all farmer profiles", "/farmers/profile/delete-all/"),
+            _del_all("Delete all flocks", "/farmers/flocks/delete-all/"),
+        ]),
+        folder("Vets", [
+            _del_all("Delete all vet profiles", "/vets/profiles/delete-all/"),
+            _del_all("Delete all vet reviews", "/vets/reviews/delete-all/"),
+        ]),
+        folder("Companies", [
+            _del_all("Delete all companies", "/companies/companies/delete-all/"),
+        ]),
+        folder("E-commerce", [
+            _del_all("Delete all products", "/ecommerce/products/delete-all/",
+                     "Images, reviews, and cart items CASCADE."),
+            _del_all("Delete all categories", "/ecommerce/categories/delete-all/",
+                     "Products in those categories CASCADE."),
+            _del_all("Delete all product images", "/ecommerce/product-images/delete-all/"),
+            _del_all("Delete all carts", "/ecommerce/cart/delete-all/"),
+        ]),
+        folder("Orders", [
+            _del_all("Delete all orders", "/orders/orders/delete-all/"),
+        ]),
+        folder("Medical", [
+            _del_all("Delete all appointment slots", "/medical/slots/delete-all/"),
+            _del_all("Delete all appointments", "/medical/appointments/delete-all/"),
+            _del_all("Delete all prescriptions", "/medical/prescriptions/delete-all/"),
+        ]),
+        folder("Social", [
+            _del_all("Delete all posts", "/social/posts/delete-all/",
+                     "Comments and likes CASCADE."),
+            _del_all("Delete all comments", "/social/comments/delete-all/"),
+        ]),
+    ]
+    items.append(
+        folder(
+            "14 - Admin: Delete All",
+            delete_all_items,
+            desc=(
+                "One `DELETE .../delete-all/` per table. All require a **staff JWT** (`is_staff=True`). "
+                "Login as a superuser (`python manage.py createsuperuser`) then use **Login - Admin**.\n\n"
+                "⚠️ These are **irreversible**. Use with care."
+            ),
+        )
+    )
 
 def main():
     root = Path(__file__).resolve().parent.parent

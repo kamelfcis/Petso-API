@@ -131,6 +131,13 @@ class ProductImageViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     filterset_fields = ["product"]
 
+    @action(detail=False, methods=["delete"], url_path="delete-all",
+            permission_classes=(permissions.IsAdminUser,))
+    def delete_all(self, request):
+        n = ProductImage.objects.count()
+        ProductImage.objects.all().delete()
+        return Response({"deleted": n}, status=status.HTTP_200_OK)
+
 class CartViewSet(viewsets.ModelViewSet):
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
@@ -138,6 +145,14 @@ class CartViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
+
+    @action(detail=False, methods=["delete"], url_path="delete-all",
+            permission_classes=(permissions.IsAdminUser,))
+    def delete_all(self, request):
+        from .models import CartItem
+        n = Cart.objects.count()
+        Cart.objects.all().delete()
+        return Response({"deleted": n}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
     def add_item(self, request):

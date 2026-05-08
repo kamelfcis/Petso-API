@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -28,8 +28,14 @@ class VetProfileViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def perform_create(self, serializer):
-        # user is read-only on VetProfileSerializer; must bind the logged-in vet here
         serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=["delete"], url_path="delete-all",
+            permission_classes=(permissions.IsAdminUser,))
+    def delete_all(self, request):
+        n = VetProfile.objects.count()
+        VetProfile.objects.all().delete()
+        return Response({"deleted": n}, status=status.HTTP_200_OK)
 
 class VetReviewViewSet(viewsets.ModelViewSet):
     queryset = VetReview.objects.all()
@@ -37,6 +43,11 @@ class VetReviewViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def perform_create(self, serializer):
-        # Ensure farmer is the one creating review
-        # farmer = FarmerProfile.objects.get(user=self.request.user)
         serializer.save()
+
+    @action(detail=False, methods=["delete"], url_path="delete-all",
+            permission_classes=(permissions.IsAdminUser,))
+    def delete_all(self, request):
+        n = VetReview.objects.count()
+        VetReview.objects.all().delete()
+        return Response({"deleted": n}, status=status.HTTP_200_OK)

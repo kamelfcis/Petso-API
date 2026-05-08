@@ -284,6 +284,13 @@ class PostViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK,
         )
 
+    @action(detail=False, methods=["delete"], url_path="delete-all",
+            permission_classes=(permissions.IsAdminUser,))
+    def delete_all(self, request):
+        n = Post.objects.count()
+        Post.objects.all().delete()
+        return Response({"deleted": n}, status=status.HTTP_200_OK)
+
 
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
@@ -292,3 +299,10 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=["delete"], url_path="delete-all",
+            permission_classes=(permissions.IsAdminUser,))
+    def delete_all(self, request):
+        n = Comment.objects.count()
+        Comment.objects.all().delete()
+        return Response({"deleted": n}, status=status.HTTP_200_OK)

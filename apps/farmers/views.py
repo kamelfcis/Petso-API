@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -29,7 +29,6 @@ class FarmerProfileViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def perform_create(self, serializer):
-        # One profile per user (OneToOne). Re-POSTing must update, not insert — avoids UNIQUE on user_id.
         validated = dict(serializer.validated_data)
         validated.pop("user", None)
         profile, _created = FarmerProfile.objects.update_or_create(
@@ -37,6 +36,13 @@ class FarmerProfileViewSet(viewsets.ModelViewSet):
             defaults=validated,
         )
         serializer.instance = profile
+
+    @action(detail=False, methods=["delete"], url_path="delete-all",
+            permission_classes=(permissions.IsAdminUser,))
+    def delete_all(self, request):
+        n = FarmerProfile.objects.count()
+        FarmerProfile.objects.all().delete()
+        return Response({"deleted": n}, status=status.HTTP_200_OK)
 
 class PoultryFlockViewSet(viewsets.ModelViewSet):
     queryset = PoultryFlock.objects.all()
@@ -65,3 +71,10 @@ class PoultryFlockViewSet(viewsets.ModelViewSet):
                 {"farmer": "Create a farmer profile (POST /api/farmers/profile/) before adding flocks."}
             )
         serializer.save(farmer=farmer_profile)
+
+    @action(detail=False, methods=["delete"], url_path="delete-all",
+            permission_classes=(permissions.IsAdminUser,))
+    def delete_all(self, request):
+        n = PoultryFlock.objects.count()
+        PoultryFlock.objects.all().delete()
+        return Response({"deleted": n}, status=status.HTTP_200_OK)
