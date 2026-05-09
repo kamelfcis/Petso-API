@@ -158,21 +158,60 @@ class CartViewSet(viewsets.ModelViewSet):
     def add_item(self, request):
         product_id = request.data.get('product_id')
         quantity = int(request.data.get('quantity', 1))
-        
+
         try:
             product = Product.objects.get(id=product_id)
-            cart, created = Cart.objects.get_or_create(user=request.user)
-            
+            cart, _ = Cart.objects.get_or_create(user=request.user)
             cart_item, created = CartItem.objects.get_or_create(
-                cart=cart, 
+                cart=cart,
                 product=product,
-                defaults={'unit_price': product.unit_price, 'quantity': quantity}
+                defaults={'unit_price': product.unit_price, 'quantity': quantity},
             )
-            
             if not created:
                 cart_item.quantity += quantity
                 cart_item.save()
-            
             return Response(CartSerializer(cart).data, status=status.HTTP_200_OK)
         except Product.DoesNotExist:
             return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['post'], url_path='remove_item')
+    def remove_item(self, request):
+        """Remove a single product from the cart entirely."""
+        product_id = request.data.get('product_id')
+        if not product_id:
+            return Response({'error': 'product_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            cart = Cart.objects.get(user=request.user)
+            item = CartItem.objects.get(cart=cart, product_id=product_id)
+            item.delete()
+            return Response(CartSerializer(cart).data, status=status.HTTP_200_OK)
+        except Cart.DoesNotExist:
+            return Response({'error': 'Cart is empty.'}, status=status.HTTP_404_NOT_FOUND)
+        except CartItem.DoesNotExist:
+            return Response({'error': 'Product not in cart.'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['post'], url_path='update_item')
+    def update_item(self, request):
+        """Set the quantity of a cart item. Pass quantity=0 to remove it."""
+        product_id = request.data.get('product_id')
+        try:
+            quantity = int(request.data.get('quantity', 1))
+        except (TypeError, ValueError):
+            return Response({'error': 'quantity must be an integer.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not product_id:
+            return Response({'error': 'product_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            cart = Cart.objects.get(user=request.user)
+            item = CartItem.objects.get(cart=cart, product_id=product_id)
+            if quantity <= 0:
+                item.delete()
+            else:
+                item.quantity = quantity
+                item.save()
+            return Response(CartSerializer(cart).data, status=status.HTTP_200_OK)
+        except Cart.DoesNotExist:
+            return Response({'error': 'Cart is empty.'}, status=status.HTTP_404_NOT_FOUND)
+        except CartItem.DoesNotExist:
+            return Response({'error': 'Product not in cart.'}, status=status.HTTP_404_NOT_FOUND)

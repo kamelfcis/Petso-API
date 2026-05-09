@@ -1360,10 +1360,76 @@
               }
             ],
             "url": "{{base_url}}/api/ecommerce/cart/add_item/",
-            "description": "Requires authenticated user (e.g. farmer).",
+            "description": "Adds a product to the cart. If the product is already in the cart, quantity is incremented.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"product_id\": \"{{product_id}}\",\n  \"quantity\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cart - Remove item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/ecommerce/cart/remove_item/",
+            "description": "Removes the product entirely from the cart. Returns the updated cart.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": \"{{product_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cart - Update item quantity",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/ecommerce/cart/update_item/",
+            "description": "Sets the quantity of a cart item to the given value. Pass `quantity=0` to remove the item.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": \"{{product_id}}\",\n  \"quantity\": 3\n}",
               "options": {
                 "raw": {
                   "language": "json"
