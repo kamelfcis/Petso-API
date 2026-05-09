@@ -75,10 +75,10 @@ class AppointmentSlotViewSet(viewsets.ModelViewSet):
         qs = super().get_queryset()
         params = self.request.query_params
 
-        # Manual filtering to avoid ModelChoiceFilter validation errors
+        # Filter by vet user_id (User table PK), not VetProfile PK
         vet_id = params.get("vet")
         if vet_id:
-            qs = qs.filter(vet_id=vet_id)
+            qs = qs.filter(vet__user_id=vet_id)
 
         is_available = params.get("is_available")
         if is_available is not None:
