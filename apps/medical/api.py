@@ -53,11 +53,10 @@ class AppointmentSlotViewSet(viewsets.ModelViewSet):
     """
     Vets manage their own slots.
     Anyone (including unauthenticated) can list/read slots.
-    Filter: ?vet=<vet_profile_id>  ?is_available=true
+    Filter: ?vet=<vet_profile_id>  ?is_available=true  ?date=YYYY-MM-DD
     """
     queryset = AppointmentSlot.objects.all().order_by("date", "start_time")
     serializer_class = AppointmentSlotSerializer
-    filterset_fields = ["vet", "is_available", "date"]
 
     def get_permissions(self):
         if self.action in ("list", "retrieve"):
@@ -74,8 +73,23 @@ class AppointmentSlotViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        user = self.request.user
+        params = self.request.query_params
+
+        # Manual filtering to avoid ModelChoiceFilter validation errors
+        vet_id = params.get("vet")
+        if vet_id:
+            qs = qs.filter(vet_id=vet_id)
+
+        is_available = params.get("is_available")
+        if is_available is not None:
+            qs = qs.filter(is_available=is_available.lower() in ("true", "1", "yes"))
+
+        date = params.get("date")
+        if date:
+            qs = qs.filter(date=date)
+
         # Vets see only their own slots on write actions; list is unrestricted
+        user = self.request.user
         if self.action not in ("list", "retrieve") and user.is_authenticated and getattr(user, "role", None) == "vet":
             profile = VetProfile.objects.filter(user=user).first()
             if profile:
