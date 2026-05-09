@@ -823,6 +823,18 @@ def append_shared_api_folders(items):
                 "}",
             ],
         ),
+        req(
+            "Update appointment status (vet)",
+            "PATCH",
+            "/medical/appointments/{{appointment_id}}/update-status/",
+            {"status": "accepted"},
+            desc=(
+                "Vet changes the appointment status. Login as **vet**.\n\n"
+                "Allowed values: `accepted`, `finished`, `rejected`.\n\n"
+                "Staff can also set `scheduled` or `cancelled`.\n\n"
+                "Response: full appointment object with updated status."
+            ),
+        ),
         req("Delete slot", "DELETE", "/medical/slots/{{slot_id}}/", None,
             desc="DELETE /api/medical/slots/{{slot_id}}/ — 204 No Content."),
         req("Delete appointment", "DELETE", "/medical/appointments/{{appointment_id}}/", None,

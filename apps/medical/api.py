@@ -114,6 +114,9 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     serializer_class = AppointmentSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
+    ALLOWED_STATUSES = ("scheduled", "accepted", "finished", "rejected", "cancelled")
+    VET_ALLOWED_STATUSES = ("accepted", "finished", "rejected")
+
     def get_queryset(self):
         qs = super().get_queryset()
         if self.request.user.role == 'farmer':
@@ -121,6 +124,40 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         elif self.request.user.role == 'vet':
             return qs.filter(vet__user=self.request.user)
         return qs
+
+    @action(detail=True, methods=["patch"], url_path="update-status",
+            permission_classes=(permissions.IsAuthenticated,))
+    def update_status(self, request, pk=None):
+        """Vet updates appointment status to accepted / finished / rejected."""
+        appointment = self.get_object()
+        user = request.user
+
+        if getattr(user, "role", None) != "vet" and not user.is_staff:
+            return Response(
+                {"detail": "Only vets (or staff) can update appointment status."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if not user.is_staff:
+            vet_profile = VetProfile.objects.filter(user=user).first()
+            if vet_profile is None or appointment.vet != vet_profile:
+                return Response(
+                    {"detail": "You can only update status for your own appointments."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+        new_status = request.data.get("status", "").strip()
+        allowed = self.VET_ALLOWED_STATUSES if not user.is_staff else self.ALLOWED_STATUSES
+        if new_status not in allowed:
+            return Response(
+                {"detail": f"Invalid status. Allowed values: {', '.join(allowed)}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        appointment.status = new_status
+        appointment.save(update_fields=["status"])
+        serializer = self.get_serializer(appointment)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["delete"], url_path="delete-all",
             permission_classes=(permissions.IsAdminUser,))
