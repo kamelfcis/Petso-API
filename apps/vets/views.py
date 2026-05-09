@@ -38,7 +38,7 @@ class VetProfileViewSet(viewsets.ModelViewSet):
         return Response({"deleted": n}, status=status.HTTP_200_OK)
 
 class VetReviewViewSet(viewsets.ModelViewSet):
-    queryset = VetReview.objects.all()
+    queryset = VetReview.objects.select_related("vet__user", "farmer__user").all()
     serializer_class = VetReviewSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
