@@ -1610,10 +1610,10 @@
               }
             ],
             "url": "{{base_url}}/api/orders/orders/",
-            "description": "Serializer may mark total as read-only; adjust backend if create fails.",
+            "description": "Creates an order from the **current cart items** — add products to cart first via **Cart - Add item**.\n\n`total` is calculated automatically from cart items. `user`, `order_number`, `status` are set by the server.\n\nAfter a successful order the cart is **cleared automatically**.\n\nResponse includes the full order with `items` (product_name, quantity, unit_price, total_price).",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"company\": \"{{company_profile_id}}\",\n  \"shipping_address\": \"Farm gate, Giza\",\n  \"total\": \"900.00\",\n  \"payment_method\": \"Wallet\",\n  \"prescription_id\": null,\n  \"delivery_date\": null\n}",
+              "raw": "{\n  \"company\": \"{{company_profile_id}}\",\n  \"shipping_address\": \"Farm gate, Giza\",\n  \"payment_method\": \"Wallet\",\n  \"prescription_id\": null,\n  \"delivery_date\": null\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1630,7 +1630,21 @@
                 }
               ]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"order_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "List order status history",

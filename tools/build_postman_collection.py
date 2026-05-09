@@ -732,12 +732,22 @@ def append_shared_api_folders(items):
             {
                 "company": "{{company_profile_id}}",
                 "shipping_address": "Farm gate, Giza",
-                "total": "900.00",
                 "payment_method": "Wallet",
                 "prescription_id": None,
                 "delivery_date": None,
             },
-            desc="Serializer may mark total as read-only; adjust backend if create fails.",
+            desc=(
+                "Creates an order from the **current cart items** — add products to cart first via **Cart - Add item**.\n\n"
+                "`total` is calculated automatically from cart items. `user`, `order_number`, `status` are set by the server.\n\n"
+                "After a successful order the cart is **cleared automatically**.\n\n"
+                "Response includes the full order with `items` (product_name, quantity, unit_price, total_price)."
+            ),
+            tests=[
+                "if (pm.response.code === 201) {",
+                "  var j = pm.response.json();",
+                '  if (j.id) pm.collectionVariables.set("order_id", String(j.id));',
+                "}",
+            ],
         ),
         req("List order status history", "GET", "/orders/status-history/", None),
         req("Delete order", "DELETE", "/orders/orders/{{order_id}}/", None,
