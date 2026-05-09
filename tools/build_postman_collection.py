@@ -269,8 +269,11 @@ def readme_folder(*, variant: str):
             "1. Accounts are pre-verified at signup (`is_verified`) — no OTP.\n"
             "2. Register test users → Login → run folders in order; update `*_id` variables from responses.\n"
             "3. Set `admin_email` / `admin_password` to match your VPS `createsuperuser` for staff-only routes (bulk delete, etc.).\n"
-            "4. Public (no auth): `GET /api/farmers/profile/all/`, `GET /api/vets/profiles/all/`, `GET /api/medical/slots/`, etc.\n"
-            "5. Login returns `user_id`, `email`, `name`, `role` alongside JWT tokens.\n\n"
+            "4. Public (no auth): `GET /api/farmers/profile/all/`, `GET /api/vets/profiles/all/`, `GET /api/medical/slots/?vet={{vet_user_id}}`, etc.\n"
+            "5. Login returns `user_id`, `email`, `name`, `role` alongside JWT tokens.\n"
+            "6. Vet reviews return `vet_name` and `farmer_name`.\n"
+            "7. Appointments return `vet_name` and `farmer_name`; vet can update status via `PATCH .../appointments/{id}/update-status/`.\n"
+            "8. Filter slots by vet **user_id**: `?vet=<user_id>` (not VetProfile id).\n\n"
             "**Variables:** base_url, admin_*, role emails/passwords, tokens, *_id"
         )
     else:
@@ -475,7 +478,7 @@ def append_shared_api_folders(items):
                 "rating": 5,
                 "review_text": "Excellent service.",
             },
-            desc="Login as farmer; set vet_profile_id and farmer_profile_id.",
+            desc="Login as farmer; set vet_profile_id and farmer_profile_id. Response includes `vet_name` and `farmer_name`.",
             tests=[
                 "if (pm.response.code === 201) {",
                 "  var j = pm.response.json();",
@@ -483,6 +486,8 @@ def append_shared_api_folders(items):
                 "}",
             ],
         ),
+        req("Get vet review", "GET", "/vets/reviews/{{vet_review_id}}/", None,
+            desc="Returns `vet_name` and `farmer_name` alongside the IDs."),
         req("Delete vet profile", "DELETE", "/vets/profiles/{{vet_profile_id}}/", None,
             desc="DELETE /api/vets/profiles/{{vet_profile_id}}/ — 204 No Content."),
         req("Delete vet review", "DELETE", "/vets/reviews/{{vet_review_id}}/", None,
@@ -744,14 +749,14 @@ def append_shared_api_folders(items):
             "/medical/slots/",
             None,
             auth="noauth",
-            desc="No auth required. Filter by vet: `?vet={{vet_profile_id}}`. Filter available: `?is_available=true`.",
+            desc="No auth required. Filter by vet user_id: `?vet={{vet_user_id}}`. Filter available: `?is_available=true`. Filter by date: `?date=YYYY-MM-DD`.",
         ),
         req(
             "List vet's own slots",
             "GET",
-            "/medical/slots/?vet={{vet_profile_id}}",
+            "/medical/slots/?vet={{vet_user_id}}",
             None,
-            desc="Filter slots for a specific vet. No auth required.",
+            desc="Filter slots by vet **user_id** (the `user_id` returned at login). No auth required. Also supports `?is_available=true` and `?date=YYYY-MM-DD`.",
             auth="noauth",
         ),
         req(

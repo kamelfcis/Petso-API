@@ -191,7 +191,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/api/docs/",
-            "description": "**VPS server** — default `base_url`: `http://95.216.63.81:8000` (edit the collection variable if your host/port differs).\n1. Accounts are pre-verified at signup (`is_verified`) — no OTP.\n2. Register test users → Login → run folders in order; update `*_id` variables from responses.\n3. Set `admin_email` / `admin_password` to match your VPS `createsuperuser` for staff-only routes (bulk delete, etc.).\n4. Public (no auth): `GET /api/farmers/profile/all/`, `GET /api/vets/profiles/all/`, `GET /api/medical/slots/`, etc.\n5. Login returns `user_id`, `email`, `name`, `role` alongside JWT tokens.\n\n**Variables:** base_url, admin_*, role emails/passwords, tokens, *_id"
+            "description": "**VPS server** — default `base_url`: `http://95.216.63.81:8000` (edit the collection variable if your host/port differs).\n1. Accounts are pre-verified at signup (`is_verified`) — no OTP.\n2. Register test users → Login → run folders in order; update `*_id` variables from responses.\n3. Set `admin_email` / `admin_password` to match your VPS `createsuperuser` for staff-only routes (bulk delete, etc.).\n4. Public (no auth): `GET /api/farmers/profile/all/`, `GET /api/vets/profiles/all/`, `GET /api/medical/slots/?vet={{vet_user_id}}`, etc.\n5. Login returns `user_id`, `email`, `name`, `role` alongside JWT tokens.\n6. Vet reviews return `vet_name` and `farmer_name`.\n7. Appointments return `vet_name` and `farmer_name`; vet can update status via `PATCH .../appointments/{id}/update-status/`.\n8. Filter slots by vet **user_id**: `?vet=<user_id>` (not VetProfile id).\n\n**Variables:** base_url, admin_*, role emails/passwords, tokens, *_id"
           }
         }
       ]
@@ -792,7 +792,7 @@
               }
             ],
             "url": "{{base_url}}/api/vets/reviews/",
-            "description": "Login as farmer; set vet_profile_id and farmer_profile_id.",
+            "description": "Login as farmer; set vet_profile_id and farmer_profile_id. Response includes `vet_name` and `farmer_name`.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"vet\": \"{{vet_profile_id}}\",\n  \"farmer\": \"{{farmer_profile_id}}\",\n  \"rating\": 5,\n  \"review_text\": \"Excellent service.\"\n}",
@@ -827,6 +827,25 @@
               }
             }
           ]
+        },
+        {
+          "name": "Get vet review",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/vets/reviews/{{vet_review_id}}/",
+            "description": "Returns `vet_name` and `farmer_name` alongside the IDs.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
         },
         {
           "name": "Delete vet profile",
@@ -1649,7 +1668,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/api/medical/slots/",
-            "description": "No auth required. Filter by vet: `?vet={{vet_profile_id}}`. Filter available: `?is_available=true`.",
+            "description": "No auth required. Filter by vet user_id: `?vet={{vet_user_id}}`. Filter available: `?is_available=true`. Filter by date: `?date=YYYY-MM-DD`.",
             "auth": {
               "type": "noauth"
             }
@@ -1660,8 +1679,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/medical/slots/?vet={{vet_profile_id}}",
-            "description": "Filter slots for a specific vet. No auth required.",
+            "url": "{{base_url}}/api/medical/slots/?vet={{vet_user_id}}",
+            "description": "Filter slots by vet **user_id** (the `user_id` returned at login). No auth required. Also supports `?is_available=true` and `?date=YYYY-MM-DD`.",
             "auth": {
               "type": "noauth"
             }

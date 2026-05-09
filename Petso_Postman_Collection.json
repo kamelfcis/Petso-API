@@ -741,7 +741,7 @@
               }
             ],
             "url": "{{base_url}}/api/vets/reviews/",
-            "description": "Login as farmer; set vet_profile_id and farmer_profile_id.",
+            "description": "Login as farmer; set vet_profile_id and farmer_profile_id. Response includes `vet_name` and `farmer_name`.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"vet\": \"{{vet_profile_id}}\",\n  \"farmer\": \"{{farmer_profile_id}}\",\n  \"rating\": 5,\n  \"review_text\": \"Excellent service.\"\n}",
@@ -776,6 +776,25 @@
               }
             }
           ]
+        },
+        {
+          "name": "Get vet review",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/vets/reviews/{{vet_review_id}}/",
+            "description": "Returns `vet_name` and `farmer_name` alongside the IDs.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
         },
         {
           "name": "Delete vet profile",
@@ -1598,7 +1617,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/api/medical/slots/",
-            "description": "No auth required. Filter by vet: `?vet={{vet_profile_id}}`. Filter available: `?is_available=true`.",
+            "description": "No auth required. Filter by vet user_id: `?vet={{vet_user_id}}`. Filter available: `?is_available=true`. Filter by date: `?date=YYYY-MM-DD`.",
             "auth": {
               "type": "noauth"
             }
@@ -1609,8 +1628,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{base_url}}/api/medical/slots/?vet={{vet_profile_id}}",
-            "description": "Filter slots for a specific vet. No auth required.",
+            "url": "{{base_url}}/api/medical/slots/?vet={{vet_user_id}}",
+            "description": "Filter slots by vet **user_id** (the `user_id` returned at login). No auth required. Also supports `?is_available=true` and `?date=YYYY-MM-DD`.",
             "auth": {
               "type": "noauth"
             }
