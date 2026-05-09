@@ -9,10 +9,11 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
+
     class Meta:
         model = Order
         fields = '__all__'
-        read_only_fields = ('order_number', 'total', 'status')
+        read_only_fields = ('user', 'order_number', 'status')
 
 class OrderStatusHistorySerializer(serializers.ModelSerializer):
     class Meta:
