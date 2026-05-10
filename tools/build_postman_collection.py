@@ -265,16 +265,19 @@ def readme_folder(*, variant: str):
         )
     elif variant == "vps":
         desc = (
-            "**VPS server** — default `base_url`: `http://95.216.63.81:8000` (edit the collection variable if your host/port differs).\n"
-            "1. Accounts are pre-verified at signup (`is_verified`) — no OTP.\n"
-            "2. Register test users → Login → run folders in order; update `*_id` variables from responses.\n"
-            "3. Set `admin_email` / `admin_password` to match your VPS `createsuperuser` for staff-only routes (bulk delete, etc.).\n"
-            "4. Public (no auth): `GET /api/farmers/profile/all/`, `GET /api/vets/profiles/all/`, `GET /api/medical/slots/?vet={{vet_user_id}}`, etc.\n"
-            "5. Login returns `user_id`, `email`, `name`, `role` alongside JWT tokens.\n"
-            "6. Vet reviews return `vet_name` and `farmer_name`.\n"
-            "7. Appointments return `vet_name` and `farmer_name`; vet can update status via `PATCH .../appointments/{id}/update-status/`.\n"
-            "8. Filter slots by vet **user_id**: `?vet=<user_id>` (not VetProfile id).\n\n"
-            "**Variables:** base_url, admin_*, role emails/passwords, tokens, *_id"
+            "**VPS server** — default `base_url`: `http://95.216.63.81:8000` (edit the collection variable if your host/port differs).\n\n"
+            "**Suggested flow:**\n"
+            "1. Register users → Login (tokens auto-saved) → follow folders in order.\n"
+            "2. Set `admin_email` / `admin_password` for staff-only routes (bulk delete, etc.).\n\n"
+            "**Key features:**\n"
+            "- Login returns `user_id`, `email`, `name`, `role` with JWT tokens.\n"
+            "- Public lists (no auth): farmers `/all/`, vets `/all/`, slots `?vet=<user_id>`.\n"
+            "- Vet reviews & appointments include `vet_name` and `farmer_name`.\n"
+            "- Vet updates appointment status: `PATCH .../appointments/{id}/update-status/` → `accepted / finished / rejected`.\n"
+            "- Cart: `add_item`, `remove_item`, `update_item` actions.\n"
+            "- Orders: auto-filled from cart items on create; cart cleared automatically after order.\n"
+            "- All tables have `DELETE .../delete-all/` (staff JWT required) + single `DELETE /{id}/`.\n\n"
+            "**Variables:** base_url, admin_*, role emails/passwords, tokens, *_id fields"
         )
     else:
         desc = (
