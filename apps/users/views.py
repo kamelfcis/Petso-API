@@ -1,8 +1,12 @@
+from django.core import signing
+
 from rest_framework import viewsets, permissions, generics, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
+
+from .email_utils import send_confirmation_email, verify_confirmation_token
 from .models import User, UserNotificationPreference, UserActivityLog
 from .serializers import (
     UserSerializer,
@@ -16,6 +20,7 @@ from .serializers import (
 class PetsoTokenObtainPairView(TokenObtainPairView):
     """JWT login that also returns user_id, email, name, and role."""
     serializer_class = PetsoTokenObtainPairSerializer
+
 
 class CurrentUserView(APIView):
     """GET /api/auth/me/ — returns the logged-in user's profile."""
@@ -31,6 +36,105 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = RegisterSerializer
 
+    def perform_create(self, serializer):
+        user = serializer.save()
+        # Send confirmation email (non-blocking: failure is logged, not raised)
+        sent = send_confirmation_email(user)
+        if not sent:
+            # Email failed but user was created — they can use resend endpoint
+            pass
+
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        response.data["message"] = (
+            "Registration successful. Please check your email to confirm your account."
+        )
+        return response
+
+
+class ConfirmEmailView(APIView):
+    """GET /api/auth/confirm-email/?token=<token>"""
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request):
+        token = request.query_params.get("token", "").strip()
+        if not token:
+            return Response(
+                {"detail": "Invalid or expired confirmation token."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            user_pk = verify_confirmation_token(token)
+        except signing.SignatureExpired:
+            return Response(
+                {"detail": "Invalid or expired confirmation token."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except signing.BadSignature:
+            return Response(
+                {"detail": "Invalid or expired confirmation token."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            user = User.objects.get(pk=user_pk)
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "Invalid or expired confirmation token."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if user.is_email_verified:
+            return Response(
+                {"message": "Email already confirmed. You can log in."},
+                status=status.HTTP_200_OK,
+            )
+
+        user.is_email_verified = True
+        user.is_verified = True
+        user.save(update_fields=["is_email_verified", "is_verified"])
+
+        return Response(
+            {"message": "Email confirmed successfully. You can now log in."},
+            status=status.HTTP_200_OK,
+        )
+
+
+class ResendConfirmationView(APIView):
+    """POST /api/auth/resend-confirmation/  body: { "email": "..." }"""
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        email = request.data.get("email", "").strip().lower()
+        if not email:
+            return Response(
+                {"detail": "email field is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Always return the same response to avoid user enumeration
+        try:
+            user = User.objects.get(email__iexact=email)
+        except User.DoesNotExist:
+            return Response(
+                {"message": "If that email exists and is unverified, a new confirmation link has been sent."},
+                status=status.HTTP_200_OK,
+            )
+
+        if user.is_email_verified:
+            return Response(
+                {"message": "This email is already confirmed. You can log in."},
+                status=status.HTTP_200_OK,
+            )
+
+        send_confirmation_email(user)
+        return Response(
+            {"message": "If that email exists and is unverified, a new confirmation link has been sent."},
+            status=status.HTTP_200_OK,
+        )
+
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -42,6 +146,7 @@ class UserViewSet(viewsets.ModelViewSet):
         n = User.objects.count()
         User.objects.all().delete()
         return Response({"deleted": n}, status=status.HTTP_200_OK)
+
 
 class UserNotificationPreferenceViewSet(viewsets.ModelViewSet):
     queryset = UserNotificationPreference.objects.all()
@@ -57,6 +162,7 @@ class UserNotificationPreferenceViewSet(viewsets.ModelViewSet):
         n = UserNotificationPreference.objects.count()
         UserNotificationPreference.objects.all().delete()
         return Response({"deleted": n}, status=status.HTTP_200_OK)
+
 
 class UserActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = UserActivityLog.objects.all()

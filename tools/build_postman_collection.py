@@ -246,6 +246,29 @@ def build_auth_items(*, variant: str):
                     "Requires Bearer token (any role)."
                 ),
             ),
+            req(
+                "Confirm email",
+                "GET",
+                "/auth/confirm-email/?token=PASTE_TOKEN_HERE",
+                None,
+                auth="noauth",
+                desc=(
+                    "Confirms the user's email address. The `token` is in the confirmation link sent after registration.\n\n"
+                    "Success: `{ \"message\": \"Email confirmed successfully. You can now log in.\" }`\n\n"
+                    "Error: `{ \"detail\": \"Invalid or expired confirmation token.\" }`"
+                ),
+            ),
+            req(
+                "Resend confirmation email",
+                "POST",
+                "/auth/resend-confirmation/",
+                {"email": "{{farmer_email}}"},
+                auth="noauth",
+                desc=(
+                    "Resends the confirmation email if the account is not yet verified.\n\n"
+                    "Always returns 200 to prevent user enumeration."
+                ),
+            ),
         ]
     )
     items.extend(login_items)

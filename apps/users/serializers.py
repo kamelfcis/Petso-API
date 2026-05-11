@@ -1,5 +1,6 @@
 from django.db import transaction
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import User, UserNotificationPreference, UserActivityLog
@@ -10,6 +11,13 @@ class PetsoTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
         data = super().validate(attrs)
+
+        # Block login if email not confirmed
+        if not self.user.is_email_verified:
+            raise PermissionDenied(
+                "Please verify your email before logging in."
+            )
+
         data["user_id"] = self.user.pk
         data["email"] = self.user.email
         data["name"] = self.user.name
@@ -31,8 +39,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         read_only_fields = ('is_verified',)
 
     def create(self, validated_data):
-        # One transaction: user row + post_save (wallet, prefs, activity) commit together.
-        # Fewer disk syncs on SQLite and fewer round-trips on Postgres than autocommit per INSERT.
         with transaction.atomic():
             return User.objects.create_user(
                 email=validated_data['email'],
@@ -40,7 +46,8 @@ class RegisterSerializer(serializers.ModelSerializer):
                 name=validated_data.get('name', ''),
                 phone_number=validated_data.get('phone_number', ''),
                 role=validated_data.get('role', 'farmer'),
-                is_verified=True,
+                is_verified=False,
+                is_email_verified=False,
             )
 
 class UserNotificationPreferenceSerializer(serializers.ModelSerializer):

@@ -16,6 +16,7 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_verified', True)
+        extra_fields.setdefault('is_email_verified', True)
         extra_fields.setdefault('role', 'admin')
 
         if extra_fields.get('is_staff') is not True:
@@ -37,6 +38,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     is_verified = models.BooleanField(default=False, db_index=True)
+    is_email_verified = models.BooleanField(default=False, db_index=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='farmer', db_index=True)

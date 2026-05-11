@@ -441,6 +441,44 @@
               ]
             }
           }
+        },
+        {
+          "name": "Confirm email",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/auth/confirm-email/?token=PASTE_TOKEN_HERE",
+            "description": "Confirms the user's email address. The `token` is in the confirmation link sent after registration.\n\nSuccess: `{ \"message\": \"Email confirmed successfully. You can now log in.\" }`\n\nError: `{ \"detail\": \"Invalid or expired confirmation token.\" }`",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Resend confirmation email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/resend-confirmation/",
+            "description": "Resends the confirmation email if the account is not yet verified.\n\nAlways returns 200 to prevent user enumeration.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{farmer_email}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
         }
       ],
       "description": "JWT: Login requests save access_token and refresh_token to collection variables."

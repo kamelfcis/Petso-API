@@ -256,13 +256,22 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = _max_upload_bytes
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Email
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' if DEBUG else 'django.core.mail.backends.smtp.EmailBackend'
+# Email — set EMAIL_BACKEND=smtp in .env to force SMTP even in DEBUG mode
+_email_backend_env = env('EMAIL_BACKEND', default='').strip()
+if _email_backend_env:
+    EMAIL_BACKEND = _email_backend_env
+elif DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
 EMAIL_HOST = env('EMAIL_HOST', default='')
-EMAIL_PORT = env('EMAIL_PORT', default=587)
+EMAIL_PORT = env.int('EMAIL_PORT', default=587)
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
-EMAIL_USE_TLS = env('EMAIL_USE_TLS', default=True)
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
+EMAIL_USE_SSL = env.bool('EMAIL_USE_SSL', default=False)
+DEFAULT_FROM_EMAIL = env('EMAIL_FROM', default=EMAIL_HOST_USER or 'noreply@petso.app')
 
 # Channels (Vercel without REDIS_URL: in-memory layer so HTTP ASGI boots; WebSockets won't scale across instances)
 _redis_url = os.environ.get('REDIS_URL', '').strip()
