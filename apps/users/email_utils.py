@@ -1,16 +1,25 @@
 """
-Email confirmation helpers.
+Email confirmation helpers — delivery via Supabase Auth OTP API.
 
-Token strategy: django.core.signing.dumps / loads
-  - Signed with SECRET_KEY + a salt  → tamper-proof
-  - Contains a timestamp             → auto-expires after TOKEN_MAX_AGE_SECONDS
-  - No DB row needed
+No SMTP credentials needed.  Only requires:
+    SUPABASE_URL  = https://<project-ref>.supabase.co
+    SUPABASE_ANON_KEY = <anon / public key>
+
+Flow:
+  1. We generate a signed token (Django signing) that encodes the user PK.
+  2. We call  POST /auth/v1/otp  on the Supabase project.
+     Supabase sends a "magic-link" email from their own infrastructure.
+     The magic-link contains a `redirect_to` that points at our Django
+     confirm-email endpoint, with our signed token as a query param.
+  3. The user clicks the link → Supabase verifies their side → redirects
+     to  GET /api/auth/confirm-email/?token=<our_token>
+  4. Our endpoint verifies the signed token and marks is_email_verified=True.
 """
 import logging
 
+import httpx
 from django.conf import settings
 from django.core import signing
-from django.core.mail import send_mail
 
 logger = logging.getLogger(__name__)
 
@@ -18,82 +27,87 @@ TOKEN_MAX_AGE_SECONDS = 24 * 60 * 60   # 24 hours
 _SALT = "petso-email-confirmation-v1"
 
 
-# ---------------------------------------------------------------------------
-# Token helpers
-# ---------------------------------------------------------------------------
+# ── Token helpers ────────────────────────────────────────────────────────────
 
 def make_confirmation_token(user_pk: int) -> str:
-    """Return a URL-safe signed token encoding the user PK."""
+    """Return a URL-safe signed token that encodes *user_pk*."""
     return signing.dumps(user_pk, salt=_SALT)
 
 
 def verify_confirmation_token(token: str) -> int:
     """
-    Decode and verify *token*.
-    Returns the user PK (int) on success.
+    Decode and verify *token*.  Returns the user PK (int) on success.
     Raises signing.SignatureExpired or signing.BadSignature on failure.
     """
     return signing.loads(token, salt=_SALT, max_age=TOKEN_MAX_AGE_SECONDS)
 
 
-# ---------------------------------------------------------------------------
-# Email sending
-# ---------------------------------------------------------------------------
+# ── Helpers ──────────────────────────────────────────────────────────────────
 
-def _base_url() -> str:
-    """Public base URL without trailing slash, e.g. http://95.216.63.81:8000"""
+def _public_base_url() -> str:
     url = getattr(settings, "PETSO_PUBLIC_BASE_URL", "").strip().rstrip("/")
     return url or "http://95.216.63.81:8000"
 
 
+def _supabase_url() -> str:
+    return getattr(settings, "SUPABASE_URL", "").strip().rstrip("/")
+
+
+def _supabase_anon_key() -> str:
+    return getattr(settings, "SUPABASE_ANON_KEY", "").strip()
+
+
+# ── Email sending ─────────────────────────────────────────────────────────────
+
 def send_confirmation_email(user) -> bool:
     """
-    Send an email confirmation link to *user*.
-    Returns True on success, False on any SMTP/network error (logged).
-    """
-    token = make_confirmation_token(user.pk)
-    confirm_url = f"{_base_url()}/api/auth/confirm-email/?token={token}"
+    Send a confirmation email to *user* via Supabase OTP / magic-link.
 
-    subject = "Confirm your Petso account"
-    body = (
-        f"Hi {user.name},\n\n"
-        f"Thanks for registering with Petso!\n\n"
-        f"Please confirm your email address by clicking the link below:\n\n"
-        f"  {confirm_url}\n\n"
-        f"This link expires in 24 hours.\n\n"
-        f"If you did not create an account, you can ignore this email.\n\n"
-        f"— The Petso Team"
-    )
-    html_body = f"""
-<html><body>
-<p>Hi <strong>{user.name}</strong>,</p>
-<p>Thanks for registering with <strong>Petso</strong>!</p>
-<p>Please confirm your email address by clicking the button below:</p>
-<p>
-  <a href="{confirm_url}"
-     style="background:#4CAF50;color:#fff;padding:12px 24px;
-            text-decoration:none;border-radius:4px;display:inline-block;">
-    Confirm Email
-  </a>
-</p>
-<p>Or copy this link:<br><code>{confirm_url}</code></p>
-<p>This link expires in <strong>24 hours</strong>.</p>
-<p>If you did not create an account, you can ignore this email.</p>
-<p>— The Petso Team</p>
-</body></html>
-"""
-    from_email = settings.EMAIL_HOST_USER or "noreply@petso.app"
+    Supabase delivers the email from their own infrastructure — no SMTP
+    configuration is required.  The magic-link `redirect_to` carries our
+    signed token so Django can verify independently.
+
+    Returns True on success, False on any error (logged).
+    """
+    supabase_url = _supabase_url()
+    anon_key = _supabase_anon_key()
+
+    if not supabase_url or not anon_key:
+        logger.error(
+            "SUPABASE_URL or SUPABASE_ANON_KEY not set — cannot send confirmation email."
+        )
+        return False
+
+    token = make_confirmation_token(user.pk)
+    redirect_to = f"{_public_base_url()}/api/auth/confirm-email/?token={token}"
 
     try:
-        send_mail(
-            subject=subject,
-            message=body,
-            from_email=from_email,
-            recipient_list=[user.email],
-            html_message=html_body,
-            fail_silently=False,
+        resp = httpx.post(
+            f"{supabase_url}/auth/v1/otp",
+            headers={
+                "apikey": anon_key,
+                "Content-Type": "application/json",
+            },
+            json={
+                "email": user.email,
+                "create_user": True,          # create in Supabase auth only for email delivery
+                "options": {
+                    "emailRedirectTo": redirect_to,
+                },
+            },
+            timeout=10,
         )
-        return True
+
+        if resp.status_code == 200:
+            logger.info("Confirmation email sent to %s via Supabase OTP.", user.email)
+            return True
+
+        logger.error(
+            "Supabase OTP failed for %s — status %s: %s",
+            user.email, resp.status_code, resp.text,
+        )
+        return False
+
     except Exception as exc:
-        logger.error("Failed to send confirmation email to %s: %s", user.email, exc)
+        logger.error("Error calling Supabase OTP for %s: %s", user.email, exc)
         return False
