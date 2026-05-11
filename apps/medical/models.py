@@ -50,6 +50,9 @@ class Appointment(models.Model):
     scheduled_start = models.DateTimeField()
     scheduled_end = models.DateTimeField()
 
+    class Meta:
+        ordering = ("-scheduled_start",)
+
     def __str__(self):
         return f"Appt {self.id} - {self.farmer} with {self.vet}"
 

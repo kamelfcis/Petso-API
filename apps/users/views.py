@@ -38,17 +38,31 @@ class RegisterView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         user = serializer.save()
-        # Send confirmation email (non-blocking: failure is logged, not raised)
         sent = send_confirmation_email(user)
         if not sent:
-            # Email failed but user was created — they can use resend endpoint
-            pass
+            # Email delivery failed (e.g. rate limit). Auto-verify so the user
+            # is not permanently locked out. They can still use resend later.
+            user.is_email_verified = True
+            user.is_verified = True
+            user.save(update_fields=["is_email_verified", "is_verified"])
+            # Store flag on instance so create() can adjust response message
+            user._email_sent = False
+        else:
+            user._email_sent = True
 
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
-        response.data["message"] = (
-            "Registration successful. Please check your email to confirm your account."
-        )
+        # Access the created user to check if email was sent
+        user = User.objects.filter(email=request.data.get("email", "")).first()
+        if user and getattr(user, "_email_sent", True) is False:
+            response.data["message"] = (
+                "Registration successful. Email confirmation could not be sent right now — "
+                "you can log in directly or use resend-confirmation later."
+            )
+        else:
+            response.data["message"] = (
+                "Registration successful. Please check your email to confirm your account."
+            )
         return response
 
 

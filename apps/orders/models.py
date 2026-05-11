@@ -24,6 +24,9 @@ class Order(models.Model):
     delivery_date = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ("-created_at",)
+
     def __str__(self):
         return f"Order {self.order_number}"
 
