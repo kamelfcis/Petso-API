@@ -16,6 +16,7 @@ Flow:
   4. Our endpoint verifies the signed token and marks is_email_verified=True.
 """
 import logging
+from urllib.parse import quote
 
 import httpx
 from django.conf import settings
@@ -79,7 +80,9 @@ def send_confirmation_email(user) -> bool:
         return False
 
     token = make_confirmation_token(user.pk)
-    redirect_to = f"{_public_base_url()}/api/auth/confirm-email/?token={token}"
+    # URL-encode the token so that `:` and any other special chars survive
+    # Supabase's double-encode/decode cycle without corruption.
+    redirect_to = f"{_public_base_url()}/api/auth/confirm-email/?token={quote(token, safe='')}"
 
     try:
         resp = httpx.post(

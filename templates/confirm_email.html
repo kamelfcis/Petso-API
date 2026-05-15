@@ -218,8 +218,11 @@
   {% if email %}
   <div class="email-pill">{{ email }}</div>
   {% endif %}
+  <p id="redirect-msg" style="font-size:.875rem;color:#78909c;margin-bottom:20px;">
+    Opening app in <strong id="countdown">3</strong>s…
+  </p>
   <div>
-    <a href="petso://login" class="btn btn-primary">
+    <a href="petso://login" id="open-app-btn" class="btn btn-primary">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
@@ -285,6 +288,27 @@
 
 {% if success %}
 <script>
+  /* ── Auto-redirect to app after 3 seconds ── */
+  (function() {
+    let seconds = 3;
+    const countEl = document.getElementById("countdown");
+    const btn = document.getElementById("open-app-btn");
+
+    const tick = setInterval(() => {
+      seconds--;
+      if (countEl) countEl.textContent = seconds;
+      if (seconds <= 0) {
+        clearInterval(tick);
+        // Attempt to open the Flutter app via deep link
+        window.location.href = "petso://login";
+        // If app not installed or deep link fails, the page just stays — user can tap manually
+      }
+    }, 1000);
+
+    // If user taps the button manually, stop the countdown
+    if (btn) btn.addEventListener("click", () => clearInterval(tick));
+  })();
+
   /* ── Confetti burst on success ── */
   (function() {
     const canvas = document.getElementById("confetti");
