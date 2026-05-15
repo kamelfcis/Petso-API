@@ -19,7 +19,7 @@ from google.genai import types
 
 logger = logging.getLogger(__name__)
 
-_EMBED_MODEL = "gemini-embedding-exp-03-07"
+_EMBED_MODEL = "text-embedding-004"
 _GEN_MODEL = "gemini-2.0-flash"
 _COLLECTION = "poultry_diseases"
 _CHUNK_SIZE = 1500      # characters per chunk
@@ -41,7 +41,12 @@ class PoultryRAGEngine:
     """Singleton-friendly RAG engine – instantiate once per process."""
 
     def __init__(self, api_key: str, pdfs_dir: str | Path, db_dir: str | Path):
-        self._client = genai.Client(api_key=api_key)
+        # v1beta (default) does not support embedContent for text-embedding-004;
+        # forcing v1 makes both embeddings and generation work correctly.
+        self._client = genai.Client(
+            api_key=api_key,
+            http_options=types.HttpOptions(api_version="v1"),
+        )
         self.pdfs_dir = Path(pdfs_dir)
         self.db_dir = Path(db_dir)
         self._collection = None
