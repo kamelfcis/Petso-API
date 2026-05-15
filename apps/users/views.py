@@ -68,11 +68,15 @@ class RegisterView(generics.CreateAPIView):
 
 
 class ConfirmEmailView(APIView):
-    """GET /api/auth/confirm-email/?token=<token>"""
+    """
+    GET /api/auth/confirm-email/<token>/   ← primary (token in path)
+    GET /api/auth/confirm-email/?token=... ← legacy fallback (query param)
+    """
     permission_classes = (permissions.AllowAny,)
 
-    def get(self, request):
-        token = request.query_params.get("token", "").strip()
+    def get(self, request, token=None):
+        # Prefer path token; fall back to query param for old links
+        token = (token or request.query_params.get("token", "")).strip()
 
         if not token:
             return render(request, "confirm_email.html", {

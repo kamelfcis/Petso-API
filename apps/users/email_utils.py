@@ -80,9 +80,11 @@ def send_confirmation_email(user) -> bool:
         return False
 
     token = make_confirmation_token(user.pk)
-    # URL-encode the token so that `:` and any other special chars survive
-    # Supabase's double-encode/decode cycle without corruption.
-    redirect_to = f"{_public_base_url()}/api/auth/confirm-email/?token={quote(token, safe='')}"
+    # Put the token in the URL *path* (not a query param) so Supabase's
+    # redirect-URL wildcard  /api/auth/confirm-email/*  matches it exactly
+    # and the token is not mangled by double-encoding of query strings.
+    token_encoded = quote(token, safe='')
+    redirect_to = f"{_public_base_url()}/api/auth/confirm-email/{token_encoded}/"
 
     try:
         resp = httpx.post(

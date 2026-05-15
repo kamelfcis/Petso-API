@@ -24,5 +24,6 @@ urlpatterns = [
     path('login/', PetsoTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('confirm-email/', ConfirmEmailView.as_view(), name='confirm-email'),
+    path('confirm-email/<str:token>/', ConfirmEmailView.as_view(), name='confirm-email-path'),
     path('resend-confirmation/', ResendConfirmationView.as_view(), name='resend-confirmation'),
 ]
