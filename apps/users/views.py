@@ -1,4 +1,5 @@
 from django.core import signing
+from django.shortcuts import render
 
 from rest_framework import viewsets, permissions, generics, status
 from rest_framework.decorators import action
@@ -72,47 +73,48 @@ class ConfirmEmailView(APIView):
 
     def get(self, request):
         token = request.query_params.get("token", "").strip()
+
         if not token:
-            return Response(
-                {"detail": "Invalid or expired confirmation token."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return render(request, "confirm_email.html", {
+                "success": False,
+                "already": False,
+                "error_detail": "No confirmation token was found in the link. Please use the link from your email.",
+            }, status=400)
 
         try:
             user_pk = verify_confirmation_token(token)
-        except signing.SignatureExpired:
-            return Response(
-                {"detail": "Invalid or expired confirmation token."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        except signing.BadSignature:
-            return Response(
-                {"detail": "Invalid or expired confirmation token."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        except (signing.SignatureExpired, signing.BadSignature):
+            return render(request, "confirm_email.html", {
+                "success": False,
+                "already": False,
+                "error_detail": "This confirmation link is invalid or has expired.",
+            }, status=400)
 
         try:
             user = User.objects.get(pk=user_pk)
         except User.DoesNotExist:
-            return Response(
-                {"detail": "Invalid or expired confirmation token."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return render(request, "confirm_email.html", {
+                "success": False,
+                "already": False,
+                "error_detail": "This confirmation link is invalid or has expired.",
+            }, status=400)
 
         if user.is_email_verified:
-            return Response(
-                {"message": "Email already confirmed. You can log in."},
-                status=status.HTTP_200_OK,
-            )
+            return render(request, "confirm_email.html", {
+                "success": False,
+                "already": True,
+                "email": user.email,
+            })
 
         user.is_email_verified = True
         user.is_verified = True
         user.save(update_fields=["is_email_verified", "is_verified"])
 
-        return Response(
-            {"message": "Email confirmed successfully. You can now log in."},
-            status=status.HTTP_200_OK,
-        )
+        return render(request, "confirm_email.html", {
+            "success": True,
+            "already": False,
+            "email": user.email,
+        })
 
 
 class ResendConfirmationView(APIView):
