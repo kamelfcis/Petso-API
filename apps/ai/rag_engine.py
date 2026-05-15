@@ -1,11 +1,12 @@
 """
 Poultry Disease RAG Engine
 --------------------------
-Uses Google Gemini (google-genai SDK) for embeddings + generation and
-ChromaDB for vector storage.
+Embeddings  : ChromaDB default embedding function (all-MiniLM-L6-v2, ONNX, local — no API key needed)
+Generation  : Google Gemini 2.0 Flash (chat + vision)
+Vector store: ChromaDB (persisted to disk)
 
 Workflow:
-  1. build_index()    – extract text from PDFs → embed → store in ChromaDB
+  1. build_index()    – extract text from PDFs → embed locally → store in ChromaDB
   2. chat()           – retrieve relevant chunks → ask Gemini → return answer
   3. diagnose_image() – retrieve relevant chunks → send image + context to Gemini Vision
 """
@@ -19,7 +20,6 @@ from google.genai import types
 
 logger = logging.getLogger(__name__)
 
-_EMBED_MODEL = "text-embedding-004"
 _GEN_MODEL = "gemini-2.0-flash"
 _COLLECTION = "poultry_diseases"
 _CHUNK_SIZE = 1500      # characters per chunk
@@ -41,19 +41,24 @@ class PoultryRAGEngine:
     """Singleton-friendly RAG engine – instantiate once per process."""
 
     def __init__(self, api_key: str, pdfs_dir: str | Path, db_dir: str | Path):
-        # v1beta (default) does not support embedContent for text-embedding-004;
-        # forcing v1 makes both embeddings and generation work correctly.
-        self._client = genai.Client(
-            api_key=api_key,
-            http_options=types.HttpOptions(api_version="v1"),
-        )
+        # Gemini is used ONLY for text generation and vision (not embeddings).
+        # Embeddings are handled locally by ChromaDB's built-in ONNX model.
+        self._client = genai.Client(api_key=api_key)
         self.pdfs_dir = Path(pdfs_dir)
         self.db_dir = Path(db_dir)
         self._collection = None
+        self._embed_fn = None
 
     # ------------------------------------------------------------------ #
     #  Internal helpers                                                    #
     # ------------------------------------------------------------------ #
+
+    def _get_embed_fn(self):
+        """Return ChromaDB's default local embedding function (ONNX, no API key)."""
+        if self._embed_fn is None:
+            from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
+            self._embed_fn = DefaultEmbeddingFunction()
+        return self._embed_fn
 
     def _get_collection(self):
         if self._collection is None:
@@ -62,6 +67,7 @@ class PoultryRAGEngine:
             self._collection = client.get_or_create_collection(
                 name=_COLLECTION,
                 metadata={"hnsw:space": "cosine"},
+                embedding_function=self._get_embed_fn(),
             )
         return self._collection
 
@@ -81,14 +87,6 @@ class PoultryRAGEngine:
                         {"text": chunk_text, "source": pdf_path.name, "page": page_num}
                     )
         return chunks
-
-    def _embed(self, text: str, task: str = "RETRIEVAL_DOCUMENT") -> list[float]:
-        response = self._client.models.embed_content(
-            model=_EMBED_MODEL,
-            contents=text,
-            config=types.EmbedContentConfig(task_type=task),
-        )
-        return response.embeddings[0].values
 
     # ------------------------------------------------------------------ #
     #  Public API                                                          #
@@ -136,16 +134,19 @@ class PoultryRAGEngine:
         if not all_chunks:
             raise ValueError("PDFs were found but no text could be extracted.")
 
-        for chunk in all_chunks:
-            chunk_id = hashlib.md5(
-                f"{chunk['source']}|{chunk['page']}|{chunk['text'][:80]}".encode()
-            ).hexdigest()
-            embedding = self._embed(chunk["text"], task="RETRIEVAL_DOCUMENT")
+        # Add in batches to avoid memory issues with large PDFs
+        batch_size = 50
+        for i in range(0, len(all_chunks), batch_size):
+            batch = all_chunks[i:i + batch_size]
             col.add(
-                ids=[chunk_id],
-                embeddings=[embedding],
-                documents=[chunk["text"]],
-                metadatas=[{"source": chunk["source"], "page": chunk["page"]}],
+                ids=[
+                    hashlib.md5(
+                        f"{c['source']}|{c['page']}|{c['text'][:80]}".encode()
+                    ).hexdigest()
+                    for c in batch
+                ],
+                documents=[c["text"] for c in batch],
+                metadatas=[{"source": c["source"], "page": c["page"]} for c in batch],
             )
 
         logger.info("Indexed %d chunks from %d PDF(s).", len(all_chunks), len(pdf_files))
@@ -160,8 +161,7 @@ class PoultryRAGEngine:
         if col.count() == 0:
             return []
         n = min(k, col.count())
-        q_embed = self._embed(query, task="RETRIEVAL_QUERY")
-        results = col.query(query_embeddings=[q_embed], n_results=n)
+        results = col.query(query_texts=[query], n_results=n)
         return [
             {"text": doc, "source": meta["source"], "page": meta["page"]}
             for doc, meta in zip(results["documents"][0], results["metadatas"][0])
@@ -196,15 +196,13 @@ class PoultryRAGEngine:
             f"Reference material:\n{context_block}"
         )
 
-        # Build Gemini-compatible history
-        gemini_history = []
-        for h in (history or []):
-            gemini_history.append(
-                types.Content(
-                    role=h["role"],
-                    parts=[types.Part(text=h["content"])],
-                )
+        gemini_history = [
+            types.Content(
+                role=h["role"],
+                parts=[types.Part(text=h["content"])],
             )
+            for h in (history or [])
+        ]
 
         chat_session = self._client.chats.create(
             model=_GEN_MODEL,
