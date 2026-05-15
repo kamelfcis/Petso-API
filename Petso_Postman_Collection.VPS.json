@@ -71,6 +71,16 @@
       "type": "string"
     },
     {
+      "key": "poultry_session_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "poultry_diagnosis_id",
+      "value": "",
+      "type": "string"
+    },
+    {
       "key": "company_user_id",
       "value": "1",
       "type": "string"
@@ -2623,6 +2633,212 @@
             "header": [],
             "url": "{{base_url}}/api/ai/cases/{{case_id}}/",
             "description": "DELETE /api/ai/cases/{{case_id}}/ — 204 No Content.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Poultry - Index status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/ai/poultry/index-status/",
+            "description": "GET /api/ai/poultry/index-status/ — Check how many chunks are indexed and whether the RAG index is ready.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Poultry - Build index (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/ai/poultry/build-index/",
+            "description": "POST /api/ai/poultry/build-index/ — Admin only. Reads all PDFs from data/poultry_pdfs/, generates embeddings with Gemini, and persists them in ChromaDB. Must be called at least once before using diagnose or chat endpoints.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Poultry - Diagnose from image",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/ai/poultry/diagnose/",
+            "description": "POST /api/ai/poultry/diagnose/ — Upload a photo of a sick chicken. Returns AI diagnosis including disease name, symptoms, treatment, prevention, and severity level. Uses RAG from poultry disease PDFs.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "",
+                  "description": "Photo of the chicken (JPEG/PNG)"
+                },
+                {
+                  "key": "question",
+                  "value": "ما هو المرض الظاهر في هذه الدجاجة؟",
+                  "type": "text",
+                  "description": "Optional question in Arabic or English"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"poultry_diagnosis_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Poultry - Chat (new session)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/ai/poultry/chat/",
+            "description": "POST /api/ai/poultry/chat/ — Send a question about poultry diseases. Omit session_id to start a new conversation. The AI answers using the RAG knowledge base built from your PDF files.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"ما هي أعراض مرض نيوكاسل وكيف يتم علاجه؟\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.session_id) pm.collectionVariables.set(\"poultry_session_id\", j.session_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Poultry - Chat (continue session)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/ai/poultry/chat/",
+            "description": "POST /api/ai/poultry/chat/ — Continue an existing conversation by passing the session_id returned from the previous chat request.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"وما هي طرق الوقاية منه؟\",\n  \"session_id\": \"{{poultry_session_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Poultry - Chat history (list sessions)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/ai/poultry/chat/history/",
+            "description": "GET /api/ai/poultry/chat/history/ — Returns all chat sessions for the authenticated user, most recent first.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Poultry - Chat session messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/ai/poultry/chat/{{poultry_session_id}}/",
+            "description": "GET /api/ai/poultry/chat/{session_id}/ — Returns the full message history (user + AI) for a specific chat session.",
             "auth": {
               "type": "bearer",
               "bearer": [

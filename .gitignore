@@ -30,3 +30,10 @@ Thumbs.db
 
 # Vercel
 .vercel
+
+# Poultry RAG — ChromaDB vector store (rebuilt on server via build-index endpoint)
+data/chroma_db/
+
+# Keep the PDFs folder tracked but ignore actual PDF files committed by accident
+# (PDFs should be uploaded to the VPS manually)
+data/poultry_pdfs/*.pdf

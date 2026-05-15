@@ -260,6 +260,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SUPABASE_URL = env('SUPABASE_URL', default='').strip().rstrip('/')
 SUPABASE_ANON_KEY = env('SUPABASE_ANON_KEY', default='').strip()
 
+# Gemini AI — used for poultry disease RAG chatbot & image diagnosis
+GEMINI_API_KEY = env('GEMINI_API_KEY', default='').strip()
+POULTRY_PDFS_DIR = BASE_DIR / 'data' / 'poultry_pdfs'
+POULTRY_CHROMA_DIR = BASE_DIR / 'data' / 'chroma_db'
+
 # Channels (Vercel without REDIS_URL: in-memory layer so HTTP ASGI boots; WebSockets won't scale across instances)
 _redis_url = os.environ.get('REDIS_URL', '').strip()
 if IS_VERCEL and not _redis_url:
