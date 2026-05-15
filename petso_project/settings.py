@@ -256,9 +256,19 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = _max_upload_bytes
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Supabase — used for email delivery (OTP magic-link), no SMTP needed
+# Supabase (kept for other potential uses)
 SUPABASE_URL = env('SUPABASE_URL', default='').strip().rstrip('/')
 SUPABASE_ANON_KEY = env('SUPABASE_ANON_KEY', default='').strip()
+
+# Email — confirmation emails sent directly via SMTP (no Supabase redirect)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = env.int('EMAIL_PORT', default=587)
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
+EMAIL_USE_SSL = env.bool('EMAIL_USE_SSL', default=False)
+EMAIL_FROM = env('EMAIL_FROM', default=EMAIL_HOST_USER)
 
 # Gemini AI — used for poultry disease RAG chatbot & image diagnosis
 GEMINI_API_KEY = env('GEMINI_API_KEY', default='').strip()

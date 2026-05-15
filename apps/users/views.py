@@ -1,4 +1,3 @@
-from django.core import signing
 from django.shortcuts import render
 
 from rest_framework import viewsets, permissions, generics, status
@@ -7,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .email_utils import send_confirmation_email, verify_confirmation_token
+from .email_utils import send_confirmation_email
 from .models import User, UserNotificationPreference, UserActivityLog
 from .serializers import (
     UserSerializer,
@@ -68,55 +67,39 @@ class RegisterView(generics.CreateAPIView):
 
 
 class ConfirmEmailView(APIView):
-    """
-    GET /api/auth/confirm-email/<token>/   ← primary (token in path)
-    GET /api/auth/confirm-email/?token=... ← legacy fallback (query param)
-    """
+    """GET /api/auth/confirm-email/<uuid>/"""
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request, token=None):
-        # Prefer path token; fall back to query param for old links
-        token = (token or request.query_params.get("token", "")).strip()
+        token = (token or "").strip()
 
         if not token:
             return render(request, "confirm_email.html", {
-                "success": False,
-                "already": False,
-                "error_detail": "No confirmation token was found in the link. Please use the link from your email.",
+                "success": False, "already": False,
+                "error_detail": "No confirmation token found. Please use the link from your email.",
             }, status=400)
 
         try:
-            user_pk = verify_confirmation_token(token)
-        except (signing.SignatureExpired, signing.BadSignature):
+            user = User.objects.get(confirmation_token=token)
+        except (User.DoesNotExist, Exception):
             return render(request, "confirm_email.html", {
-                "success": False,
-                "already": False,
-                "error_detail": "This confirmation link is invalid or has expired.",
-            }, status=400)
-
-        try:
-            user = User.objects.get(pk=user_pk)
-        except User.DoesNotExist:
-            return render(request, "confirm_email.html", {
-                "success": False,
-                "already": False,
-                "error_detail": "This confirmation link is invalid or has expired.",
+                "success": False, "already": False,
+                "error_detail": "This confirmation link is invalid or has already been used.",
             }, status=400)
 
         if user.is_email_verified:
             return render(request, "confirm_email.html", {
-                "success": False,
-                "already": True,
+                "success": False, "already": True,
                 "email": user.email,
             })
 
         user.is_email_verified = True
         user.is_verified = True
-        user.save(update_fields=["is_email_verified", "is_verified"])
+        user.confirmation_token = None  # invalidate after use
+        user.save(update_fields=["is_email_verified", "is_verified", "confirmation_token"])
 
         return render(request, "confirm_email.html", {
-            "success": True,
-            "already": False,
+            "success": True, "already": False,
             "email": user.email,
         })
 
