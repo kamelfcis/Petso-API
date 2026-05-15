@@ -19,7 +19,7 @@ from google.genai import types
 
 logger = logging.getLogger(__name__)
 
-_EMBED_MODEL = "text-embedding-004"
+_EMBED_MODEL = "gemini-embedding-exp-03-07"
 _GEN_MODEL = "gemini-2.0-flash"
 _COLLECTION = "poultry_diseases"
 _CHUNK_SIZE = 1500      # characters per chunk
