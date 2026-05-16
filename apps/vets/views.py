@@ -61,24 +61,25 @@ class VetRegistrationView(generics.CreateAPIView):
     permission_classes = (permissions.AllowAny,)
 
     def perform_create(self, serializer):
-        user = serializer.save()
+        vet_profile = serializer.save()
+        user = vet_profile.user
         # Send confirmation email to the vet
         sent = send_confirmation_email(user)
         if not sent:
             # Email delivery failed — auto-verify email so vet isn't locked out
             user.is_email_verified = True
             user.save(update_fields=["is_email_verified"])
-            user._email_sent = False
+            vet_profile._email_sent = False
         else:
-            user._email_sent = True
+            vet_profile._email_sent = True
 
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
-        user_email = request.data.get("email", "")
-        from apps.users.models import User
-        user = User.objects.filter(email__iexact=user_email).first()
+        vet_profile = VetProfile.objects.filter(
+            user__email__iexact=request.data.get("email", "")
+        ).first()
 
-        if user and getattr(user, "_email_sent", True) is False:
+        if vet_profile and getattr(vet_profile, "_email_sent", True) is False:
             response.data["message"] = (
                 "Registration successful. Email confirmation could not be sent right now — "
                 "you can use resend-confirmation later. Your account is pending admin verification."

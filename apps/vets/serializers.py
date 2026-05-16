@@ -60,7 +60,7 @@ class VetRegistrationSerializer(serializers.Serializer):
                 is_admin_verified=False,
             )
 
-            return user
+            return vet_profile
 
 class VetReviewSerializer(serializers.ModelSerializer):
     vet_name = serializers.CharField(source="vet.user.name", read_only=True)
