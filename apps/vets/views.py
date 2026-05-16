@@ -4,7 +4,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import VetProfile, VetReview
-from .serializers import VetProfileSerializer, VetReviewSerializer, VetRegistrationSerializer
+from .serializers import (
+    VetProfileSerializer,
+    VetReviewSerializer,
+    VetRegistrationSerializer,
+    VetRegistrationResponseSerializer,
+)
 from apps.users.email_utils import send_confirmation_email
 
 class VetProfileViewSet(viewsets.ModelViewSet):
@@ -74,22 +79,28 @@ class VetRegistrationView(generics.CreateAPIView):
             vet_profile._email_sent = True
 
     def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        vet_profile = VetProfile.objects.filter(
-            user__email__iexact=request.data.get("email", "")
-        ).first()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        vet_profile = serializer.instance
+        response_serializer = VetRegistrationResponseSerializer(vet_profile)
+
+        message = (
+            "Registration successful. Please check your email to confirm your account. "
+            "Your account will be pending admin verification."
+        )
 
         if vet_profile and getattr(vet_profile, "_email_sent", True) is False:
-            response.data["message"] = (
+            message = (
                 "Registration successful. Email confirmation could not be sent right now — "
                 "you can use resend-confirmation later. Your account is pending admin verification."
             )
-        else:
-            response.data["message"] = (
-                "Registration successful. Please check your email to confirm your account. "
-                "Your account will be pending admin verification."
-            )
-        return response
+
+        response_data = response_serializer.data
+        response_data["message"] = message
+
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
 
 class VetVerificationListView(generics.ListAPIView):

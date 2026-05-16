@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import VetProfile, VetReview
 from apps.users.serializers import UserSerializer
+from apps.users.models import User
 
 class VetProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -10,7 +11,7 @@ class VetProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ('is_admin_verified', 'user', 'id', 'created_at', 'updated_at', 'rating')
 
 class VetRegistrationSerializer(serializers.Serializer):
-    """Serializer for vet registration with license PDF upload."""
+    """Serializer for vet registration with license PDF upload (input only)."""
     email = serializers.EmailField()
     name = serializers.CharField(max_length=255)
     password = serializers.CharField(write_only=True, min_length=8)
@@ -32,7 +33,6 @@ class VetRegistrationSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         from django.db import transaction
-        from apps.users.models import User
 
         with transaction.atomic():
             # Create user
@@ -61,6 +61,24 @@ class VetRegistrationSerializer(serializers.Serializer):
             )
 
             return vet_profile
+
+class VetRegistrationResponseSerializer(serializers.Serializer):
+    """Serializer for vet registration response."""
+    id = serializers.IntegerField(source='id')
+    user = UserSerializer(read_only=True)
+    license_number = serializers.CharField()
+    license_document = serializers.SerializerMethodField()
+    specialties = serializers.CharField()
+    qualifications = serializers.CharField()
+    clinic_address = serializers.CharField()
+    years_of_experience = serializers.IntegerField()
+    is_admin_verified = serializers.BooleanField()
+    created_at = serializers.DateTimeField()
+
+    def get_license_document(self, obj):
+        if obj.license_document:
+            return obj.license_document.url
+        return None
 
 class VetReviewSerializer(serializers.ModelSerializer):
     vet_name = serializers.CharField(source="vet.user.name", read_only=True)
