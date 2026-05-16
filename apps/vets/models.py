@@ -14,6 +14,7 @@ class VetProfile(models.Model):
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
     gps_lat = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
     gps_long = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
+    is_admin_verified = models.BooleanField(default=False, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

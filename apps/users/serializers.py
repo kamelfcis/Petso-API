@@ -18,6 +18,13 @@ class PetsoTokenObtainPairSerializer(TokenObtainPairSerializer):
                 "Please verify your email before logging in."
             )
 
+        # Block vet login until admin verifies
+        if self.user.role == 'vet':
+            if not hasattr(self.user, 'vet_profile') or not self.user.vet_profile.is_admin_verified:
+                raise PermissionDenied(
+                    "Your account is pending admin verification. Please wait for confirmation."
+                )
+
         data["user_id"] = self.user.pk
         data["email"] = self.user.email
         data["name"] = self.user.name

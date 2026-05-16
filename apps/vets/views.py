@@ -1,9 +1,11 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import VetProfile, VetReview
-from .serializers import VetProfileSerializer, VetReviewSerializer
+from .serializers import VetProfileSerializer, VetReviewSerializer, VetRegistrationSerializer
+from apps.users.email_utils import send_confirmation_email
 
 class VetProfileViewSet(viewsets.ModelViewSet):
     queryset = VetProfile.objects.all().order_by('id')
@@ -51,3 +53,101 @@ class VetReviewViewSet(viewsets.ModelViewSet):
         n = VetReview.objects.count()
         VetReview.objects.all().delete()
         return Response({"deleted": n}, status=status.HTTP_200_OK)
+
+
+class VetRegistrationView(generics.CreateAPIView):
+    """POST /api/vets/register/ — Register a new vet with license PDF upload."""
+    serializer_class = VetRegistrationSerializer
+    permission_classes = (permissions.AllowAny,)
+
+    def perform_create(self, serializer):
+        user = serializer.save()
+        # Send confirmation email to the vet
+        sent = send_confirmation_email(user)
+        if not sent:
+            # Email delivery failed — auto-verify email so vet isn't locked out
+            user.is_email_verified = True
+            user.save(update_fields=["is_email_verified"])
+            user._email_sent = False
+        else:
+            user._email_sent = True
+
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        user_email = request.data.get("email", "")
+        from apps.users.models import User
+        user = User.objects.filter(email__iexact=user_email).first()
+
+        if user and getattr(user, "_email_sent", True) is False:
+            response.data["message"] = (
+                "Registration successful. Email confirmation could not be sent right now — "
+                "you can use resend-confirmation later. Your account is pending admin verification."
+            )
+        else:
+            response.data["message"] = (
+                "Registration successful. Please check your email to confirm your account. "
+                "Your account will be pending admin verification."
+            )
+        return response
+
+
+class VetVerificationListView(generics.ListAPIView):
+    """GET /api/vets/pending-verification/ — List all vets pending admin verification."""
+    serializer_class = VetProfileSerializer
+    permission_classes = (permissions.IsAdminUser,)
+    queryset = VetProfile.objects.filter(is_admin_verified=False).select_related('user').order_by('-created_at')
+
+
+class AdminVerifyVetView(APIView):
+    """POST /api/vets/{vet_id}/admin-verify/ — Admin verifies/confirms a vet."""
+    permission_classes = (permissions.IsAdminUser,)
+
+    def post(self, request, vet_id):
+        try:
+            vet_profile = VetProfile.objects.get(id=vet_id)
+        except VetProfile.DoesNotExist:
+            return Response(
+                {"detail": "Vet profile not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if vet_profile.is_admin_verified:
+            return Response(
+                {"detail": "This vet is already verified."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        vet_profile.is_admin_verified = True
+        vet_profile.save(update_fields=["is_admin_verified"])
+
+        return Response({
+            "detail": "Vet verified successfully.",
+            "vet_id": vet_profile.id,
+            "user_email": vet_profile.user.email,
+            "user_name": vet_profile.user.name,
+            "is_admin_verified": vet_profile.is_admin_verified,
+        }, status=status.HTTP_200_OK)
+
+
+class AdminRejectVetView(APIView):
+    """DELETE /api/vets/{vet_id}/admin-reject/ — Admin rejects/deletes a vet registration."""
+    permission_classes = (permissions.IsAdminUser,)
+
+    def delete(self, request, vet_id):
+        try:
+            vet_profile = VetProfile.objects.get(id=vet_id)
+        except VetProfile.DoesNotExist:
+            return Response(
+                {"detail": "Vet profile not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        user = vet_profile.user
+        user_email = user.email
+        vet_profile.delete()
+        user.delete()
+
+        return Response({
+            "detail": "Vet registration rejected and deleted.",
+            "user_email": user_email,
+        }, status=status.HTTP_200_OK)
