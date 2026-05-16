@@ -25,6 +25,16 @@ class VetRegistrationSerializer(serializers.Serializer):
     gps_lat = serializers.DecimalField(max_digits=9, decimal_places=6, required=False, allow_null=True)
     gps_long = serializers.DecimalField(max_digits=9, decimal_places=6, required=False, allow_null=True)
 
+    def validate_email(self, value):
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
+    def validate_license_number(self, value):
+        if VetProfile.objects.filter(license_number=value).exists():
+            raise serializers.ValidationError("A vet with this license number already exists.")
+        return value
+
     def validate_license_document(self, file):
         # Validate file is PDF
         if not file.name.lower().endswith('.pdf'):
