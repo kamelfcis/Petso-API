@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Petso - VPS (95.216.63.81)",
-    "description": "Full Petso API collection. Default **`base_url`**: `http://95.216.63.81:8000` — edit the collection variable if your server IP or port changes.\n\nIncludes: auth (`/auth/me/`, login with `user_id`), public farmers/vets lists, e-commerce (form-data products, bulk delete staff), medical slots, social like, chat, AI, system.\nRun `python tools/build_postman_collection.py` to regenerate.",
+    "description": "Full Petso API collection. Default **`base_url`**: `http://95.216.63.81:8000` \u00e2\u20ac\u201d edit the collection variable if your server IP or port changes.\n\nIncludes: vet registration with license PDF, admin vet verification, auth (`/auth/me/`, login with `user_id`), public farmers/vets lists, e-commerce (form-data products, bulk delete staff), medical slots, social like, chat, AI, system.\nRun `python tools/build_postman_collection.py` to regenerate.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -201,7 +201,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/api/docs/",
-            "description": "**VPS server** — default `base_url`: `http://95.216.63.81:8000` (edit the collection variable if your host/port differs).\n\n**Suggested flow:**\n1. Register users → Login (tokens auto-saved) → follow folders in order.\n2. Set `admin_email` / `admin_password` for staff-only routes (bulk delete, etc.).\n\n**Key features:**\n- Login returns `user_id`, `email`, `name`, `role` with JWT tokens.\n- Public lists (no auth): farmers `/all/`, vets `/all/`, slots `?vet=<user_id>`.\n- Vet reviews & appointments include `vet_name` and `farmer_name`.\n- Vet updates appointment status: `PATCH .../appointments/{id}/update-status/` → `accepted / finished / rejected`.\n- Cart: `add_item`, `remove_item`, `update_item` actions.\n- Orders: auto-filled from cart items on create; cart cleared automatically after order.\n- All tables have `DELETE .../delete-all/` (staff JWT required) + single `DELETE /{id}/`.\n\n**Variables:** base_url, admin_*, role emails/passwords, tokens, *_id fields"
+            "description": "**VPS server** \u00e2\u20ac\u201d default `base_url`: `http://95.216.63.81:8000` (edit the collection variable if your host/port differs).\n\n**Suggested flow:**\n1. Register users \u00e2\u2020\u2019 Login (tokens auto-saved) \u00e2\u2020\u2019 follow folders in order.\n2. Set `admin_email` / `admin_password` for staff-only routes (bulk delete, etc.).\n\n**Key features:**\n- Login returns `user_id`, `email`, `name`, `role` with JWT tokens.\n- Public lists (no auth): farmers `/all/`, vets `/all/`, slots `?vet=<user_id>`.\n- Vet reviews & appointments include `vet_name` and `farmer_name`.\n- Vet updates appointment status: `PATCH .../appointments/{id}/update-status/` \u00e2\u2020\u2019 `accepted / finished / rejected`.\n- Cart: `add_item`, `remove_item`, `update_item` actions.\n- Orders: auto-filled from cart items on create; cart cleared automatically after order.\n- All tables have `DELETE .../delete-all/` (staff JWT required) + single `DELETE /{id}/`.\n\n**Variables:** base_url, admin_*, role emails/passwords, tokens, *_id fields"
           }
         }
       ]
@@ -210,7 +210,7 @@
       "name": "01 - Authentication",
       "item": [
         {
-          "name": "Register - Farmer (مربي)",
+          "name": "Register - Farmer (\u0638\u2026\u0637\u00b1\u0637\u00a8\u0638\u0679)",
           "request": {
             "method": "POST",
             "header": [
@@ -220,7 +220,7 @@
               }
             ],
             "url": "{{base_url}}/api/auth/register/",
-            "description": "Creates farmer account; `is_verified` is true — login with JWT immediately.",
+            "description": "Creates farmer account; `is_verified` is true \u00e2\u20ac\u201d login with JWT immediately.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{farmer_email}}\",\n  \"password\": \"{{farmer_password}}\",\n  \"name\": \"Farmer Demo\",\n  \"phone_number\": \"+201000000001\",\n  \"role\": \"farmer\"\n}",
@@ -236,7 +236,7 @@
           }
         },
         {
-          "name": "Register - Vet (طبيب)",
+          "name": "Register - Vet (\u0637\u00b7\u0637\u00a8\u0638\u0679\u0637\u00a8)",
           "request": {
             "method": "POST",
             "header": [
@@ -261,7 +261,7 @@
           }
         },
         {
-          "name": "Register - Company (شركة)",
+          "name": "Register - Company (\u0637\u00b4\u0637\u00b1\u0638\u0192\u0637\u00a9)",
           "request": {
             "method": "POST",
             "header": [
@@ -652,7 +652,7 @@
               }
             ],
             "url": "{{base_url}}/api/farmers/flocks/",
-            "description": "As **farmer**, omit `farmer` — the server assigns your profile from the JWT. As **admin**, include `farmer` (FarmerProfile PK). Run **Create farmer profile** first if new user.",
+            "description": "As **farmer**, omit `farmer` \u00e2\u20ac\u201d the server assigns your profile from the JWT. As **admin**, include `farmer` (FarmerProfile PK). Run **Create farmer profile** first if new user.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"flock_name\": \"Batch A-2026\",\n  \"breed\": \"Ross 308\",\n  \"hatch_date\": \"2026-01-15\",\n  \"current_age_weeks\": 8,\n  \"total_count\": 5000,\n  \"mortality_count\": 12,\n  \"feed_consumption\": \"120 kg/day\",\n  \"notes\": \"Healthy flock\"\n}",
@@ -694,7 +694,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/farmers/profile/{{farmer_profile_id}}/",
-            "description": "DELETE /api/farmers/profile/{{farmer_profile_id}}/ — 204 No Content.",
+            "description": "DELETE /api/farmers/profile/{{farmer_profile_id}}/ \u00e2\u20ac\u201d 204 No Content.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -713,7 +713,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/farmers/flocks/{{flock_id}}/",
-            "description": "DELETE /api/farmers/flocks/{{flock_id}}/ — 204 No Content.",
+            "description": "DELETE /api/farmers/flocks/{{flock_id}}/ \u00e2\u20ac\u201d 204 No Content.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -731,6 +731,97 @@
     {
       "name": "03 - Vet (login as vet)",
       "item": [
+        {
+          "name": "Register new vet (with license PDF)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/vets/register/",
+            "description": "POST /api/vets/register/ \u2014 Register a new vet with license PDF upload.\n\nNo authentication needed. Vet will receive confirmation email and must wait for admin verification before login.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "newvet@petso.local",
+                  "type": "text"
+                },
+                {
+                  "key": "name",
+                  "value": "Dr. New Vet",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "SecurePass123",
+                  "type": "text"
+                },
+                {
+                  "key": "phone_number",
+                  "value": "+2348012345678",
+                  "type": "text"
+                },
+                {
+                  "key": "license_number",
+                  "value": "VET-LIC-{{$timestamp}}",
+                  "type": "text"
+                },
+                {
+                  "key": "license_document",
+                  "value": "",
+                  "type": "file"
+                },
+                {
+                  "key": "specialties",
+                  "value": "Poultry Specialist",
+                  "type": "text"
+                },
+                {
+                  "key": "qualifications",
+                  "value": "DVM, University of Lagos",
+                  "type": "text"
+                },
+                {
+                  "key": "clinic_address",
+                  "value": "123 Clinic Street, Lagos",
+                  "type": "text"
+                },
+                {
+                  "key": "years_of_experience",
+                  "value": "5",
+                  "type": "text"
+                },
+                {
+                  "key": "gps_lat",
+                  "value": "6.5244",
+                  "type": "text"
+                },
+                {
+                  "key": "gps_long",
+                  "value": "3.3792",
+                  "type": "text"
+                }
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set(\"vet_id\", String(j.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
         {
           "name": "List all vets (public)",
           "request": {
@@ -901,7 +992,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/vets/profiles/{{vet_profile_id}}/",
-            "description": "DELETE /api/vets/profiles/{{vet_profile_id}}/ — 204 No Content.",
+            "description": "DELETE /api/vets/profiles/{{vet_profile_id}}/ \u00e2\u20ac\u201d 204 No Content.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -920,7 +1011,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/vets/reviews/{{vet_review_id}}/",
-            "description": "DELETE /api/vets/reviews/{{vet_review_id}}/ — 204 No Content.",
+            "description": "DELETE /api/vets/reviews/{{vet_review_id}}/ \u00e2\u20ac\u201d 204 No Content.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1027,7 +1118,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/companies/companies/{{company_profile_id}}/",
-            "description": "DELETE /api/companies/companies/{{company_profile_id}}/ — 204 No Content.",
+            "description": "DELETE /api/companies/companies/{{company_profile_id}}/ \u00e2\u20ac\u201d 204 No Content.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1163,7 +1254,7 @@
           }
         },
         {
-          "name": "Bulk delete — staff JWT",
+          "name": "Bulk delete \u00e2\u20ac\u201d staff JWT",
           "item": [
             {
               "name": "Delete all products",
@@ -1171,7 +1262,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/ecommerce/products/delete-all/",
-                "description": "**DRF `IsAdminUser`** — Django user must have **`is_staff=True`**. Use **Login - Admin** or locally run `python manage.py createsuperuser`. API Register with `role=admin` does **not** set `is_staff`.\n\nRemoves every product; images, reviews, cart line items CASCADE. Categories unchanged.\n\nResponse: `200` `{ \"deleted\": <int> }`.",
+                "description": "**DRF `IsAdminUser`** \u00e2\u20ac\u201d Django user must have **`is_staff=True`**. Use **Login - Admin** or locally run `python manage.py createsuperuser`. API Register with `role=admin` does **not** set `is_staff`.\n\nRemoves every product; images, reviews, cart line items CASCADE. Categories unchanged.\n\nResponse: `200` `{ \"deleted\": <int> }`.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -1553,7 +1644,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/ecommerce/categories/{{category_id}}/",
-            "description": "DELETE /api/ecommerce/categories/{{category_id}}/ — 204 No Content.",
+            "description": "DELETE /api/ecommerce/categories/{{category_id}}/ \u00e2\u20ac\u201d 204 No Content.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1572,7 +1663,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/ecommerce/products/{{product_id}}/",
-            "description": "DELETE /api/ecommerce/products/{{product_id}}/ — 204 No Content. Images CASCADE.",
+            "description": "DELETE /api/ecommerce/products/{{product_id}}/ \u00e2\u20ac\u201d 204 No Content. Images CASCADE.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1591,7 +1682,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/ecommerce/product-images/{{product_image_id}}/",
-            "description": "DELETE /api/ecommerce/product-images/{{product_image_id}}/ — 204 No Content.",
+            "description": "DELETE /api/ecommerce/product-images/{{product_image_id}}/ \u00e2\u20ac\u201d 204 No Content.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1610,7 +1701,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/ecommerce/cart/{{cart_id}}/",
-            "description": "DELETE /api/ecommerce/cart/{{cart_id}}/ — 204 No Content. Cart items CASCADE.",
+            "description": "DELETE /api/ecommerce/cart/{{cart_id}}/ \u00e2\u20ac\u201d 204 No Content. Cart items CASCADE.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1624,7 +1715,7 @@
           }
         }
       ],
-      "description": "Typical order: Login Company → Create company profile → Create category → **Create product** (form-data + `image` File), or JSON alternate / POST /ecommerce/product-images/. Then Login Farmer → Cart add_item. Folder **Bulk delete — staff JWT**: `DELETE .../products/delete-all/` and `DELETE .../categories/delete-all/` (needs `is_staff`; see request descriptions)."
+      "description": "Typical order: Login Company \u00e2\u2020\u2019 Create company profile \u00e2\u2020\u2019 Create category \u00e2\u2020\u2019 **Create product** (form-data + `image` File), or JSON alternate / POST /ecommerce/product-images/. Then Login Farmer \u00e2\u2020\u2019 Cart add_item. Folder **Bulk delete \u00e2\u20ac\u201d staff JWT**: `DELETE .../products/delete-all/` and `DELETE .../categories/delete-all/` (needs `is_staff`; see request descriptions)."
     },
     {
       "name": "06 - Orders",
@@ -1658,7 +1749,7 @@
               }
             ],
             "url": "{{base_url}}/api/orders/orders/",
-            "description": "Creates an order from the **current cart items** — add products to cart first via **Cart - Add item**.\n\n`total` is calculated automatically from cart items. `user`, `order_number`, `status` are set by the server.\n\nAfter a successful order the cart is **cleared automatically**.\n\nResponse includes the full order with `items` (product_name, quantity, unit_price, total_price).",
+            "description": "Creates an order from the **current cart items** \u00e2\u20ac\u201d add products to cart first via **Cart - Add item**.\n\n`total` is calculated automatically from cart items. `user`, `order_number`, `status` are set by the server.\n\nAfter a successful order the cart is **cleared automatically**.\n\nResponse includes the full order with `items` (product_name, quantity, unit_price, total_price).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"company\": \"{{company_profile_id}}\",\n  \"shipping_address\": \"Farm gate, Giza\",\n  \"payment_method\": \"Wallet\",\n  \"prescription_id\": null,\n  \"delivery_date\": null\n}",
@@ -1718,7 +1809,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/orders/orders/{{order_id}}/",
-            "description": "DELETE /api/orders/orders/{{order_id}}/ — 204 No Content.",
+            "description": "DELETE /api/orders/orders/{{order_id}}/ \u00e2\u20ac\u201d 204 No Content.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1825,7 +1916,7 @@
               }
             ],
             "url": "{{base_url}}/api/medical/slots/",
-            "description": "Login as **vet**. `vet` is assigned automatically from JWT — do not include it in body. Run **Create vet profile** first.",
+            "description": "Login as **vet**. `vet` is assigned automatically from JWT \u00e2\u20ac\u201d do not include it in body. Run **Create vet profile** first.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"date\": \"2026-06-10\",\n  \"start_time\": \"09:00:00\",\n  \"end_time\": \"09:30:00\",\n  \"is_available\": true\n}",
@@ -2062,7 +2153,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/medical/slots/{{slot_id}}/",
-            "description": "DELETE /api/medical/slots/{{slot_id}}/ — 204 No Content.",
+            "description": "DELETE /api/medical/slots/{{slot_id}}/ \u00e2\u20ac\u201d 204 No Content.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2081,7 +2172,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/medical/appointments/{{appointment_id}}/",
-            "description": "DELETE /api/medical/appointments/{{appointment_id}}/ — 204 No Content.",
+            "description": "DELETE /api/medical/appointments/{{appointment_id}}/ \u00e2\u20ac\u201d 204 No Content.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2100,7 +2191,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/medical/prescriptions/{{prescription_id}}/",
-            "description": "DELETE /api/medical/prescriptions/{{prescription_id}}/ — 204 No Content.",
+            "description": "DELETE /api/medical/prescriptions/{{prescription_id}}/ \u00e2\u20ac\u201d 204 No Content.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2367,7 +2458,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/social/posts/{{post_id}}/",
-            "description": "DELETE /api/social/posts/{{post_id}}/ — 204 No Content. Comments and likes CASCADE.",
+            "description": "DELETE /api/social/posts/{{post_id}}/ \u00e2\u20ac\u201d 204 No Content. Comments and likes CASCADE.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2386,7 +2477,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/social/comments/{{comment_id}}/",
-            "description": "DELETE /api/social/comments/{{comment_id}}/ — 204 No Content.",
+            "description": "DELETE /api/social/comments/{{comment_id}}/ \u00e2\u20ac\u201d 204 No Content.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2525,7 +2616,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/chat/chats/{{chat_id}}/",
-            "description": "DELETE /api/chat/chats/{{chat_id}}/ — 204 No Content. Messages CASCADE.",
+            "description": "DELETE /api/chat/chats/{{chat_id}}/ \u00e2\u20ac\u201d 204 No Content. Messages CASCADE.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2544,7 +2635,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/chat/messages/{{message_id}}/",
-            "description": "DELETE /api/chat/messages/{{message_id}}/ — 204 No Content.",
+            "description": "DELETE /api/chat/messages/{{message_id}}/ \u00e2\u20ac\u201d 204 No Content.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2632,7 +2723,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/ai/cases/{{case_id}}/",
-            "description": "DELETE /api/ai/cases/{{case_id}}/ — 204 No Content.",
+            "description": "DELETE /api/ai/cases/{{case_id}}/ \u00e2\u20ac\u201d 204 No Content.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2651,7 +2742,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/api/ai/poultry/index-status/",
-            "description": "GET /api/ai/poultry/index-status/ — Check how many chunks are indexed and whether the RAG index is ready.",
+            "description": "GET /api/ai/poultry/index-status/ \u00e2\u20ac\u201d Check how many chunks are indexed and whether the RAG index is ready.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2670,7 +2761,7 @@
             "method": "POST",
             "header": [],
             "url": "{{base_url}}/api/ai/poultry/build-index/",
-            "description": "POST /api/ai/poultry/build-index/ — Admin only. Reads all PDFs from data/poultry_pdfs/, generates embeddings with Gemini, and persists them in ChromaDB. Must be called at least once before using diagnose or chat endpoints.",
+            "description": "POST /api/ai/poultry/build-index/ \u00e2\u20ac\u201d Admin only. Reads all PDFs from data/poultry_pdfs/, generates embeddings with Gemini, and persists them in ChromaDB. Must be called at least once before using diagnose or chat endpoints.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2689,7 +2780,7 @@
             "method": "POST",
             "header": [],
             "url": "{{base_url}}/api/ai/poultry/diagnose/",
-            "description": "POST /api/ai/poultry/diagnose/ — Upload a photo of a sick chicken. Returns AI diagnosis including disease name, symptoms, treatment, prevention, and severity level. Uses RAG from poultry disease PDFs.",
+            "description": "POST /api/ai/poultry/diagnose/ \u00e2\u20ac\u201d Upload a photo of a sick chicken. Returns AI diagnosis including disease name, symptoms, treatment, prevention, and severity level. Uses RAG from poultry disease PDFs.",
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -2701,7 +2792,7 @@
                 },
                 {
                   "key": "question",
-                  "value": "ما هو المرض الظاهر في هذه الدجاجة؟",
+                  "value": "\u0638\u2026\u0637\u00a7 \u0638\u2021\u0638\u02c6 \u0637\u00a7\u0638\u201e\u0638\u2026\u0637\u00b1\u0637\u00b6 \u0637\u00a7\u0638\u201e\u0637\u00b8\u0637\u00a7\u0638\u2021\u0637\u00b1 \u0638\u067e\u0638\u0679 \u0638\u2021\u0637\u00b0\u0638\u2021 \u0637\u00a7\u0638\u201e\u0637\u00af\u0637\u00ac\u0637\u00a7\u0637\u00ac\u0637\u00a9\u0637\u06ba",
                   "type": "text",
                   "description": "Optional question in Arabic or English"
                 }
@@ -2744,10 +2835,10 @@
               }
             ],
             "url": "{{base_url}}/api/ai/poultry/chat/",
-            "description": "POST /api/ai/poultry/chat/ — Send a question about poultry diseases. Omit session_id to start a new conversation. The AI answers using the RAG knowledge base built from your PDF files.",
+            "description": "POST /api/ai/poultry/chat/ \u00e2\u20ac\u201d Send a question about poultry diseases. Omit session_id to start a new conversation. The AI answers using the RAG knowledge base built from your PDF files.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"message\": \"ما هي أعراض مرض نيوكاسل وكيف يتم علاجه؟\"\n}",
+              "raw": "{\n  \"message\": \"\u0638\u2026\u0637\u00a7 \u0638\u2021\u0638\u0679 \u0637\u00a3\u0637\u00b9\u0637\u00b1\u0637\u00a7\u0637\u00b6 \u0638\u2026\u0637\u00b1\u0637\u00b6 \u0638\u2020\u0638\u0679\u0638\u02c6\u0638\u0192\u0637\u00a7\u0637\u00b3\u0638\u201e \u0638\u02c6\u0638\u0192\u0638\u0679\u0638\u067e \u0638\u0679\u0637\u06be\u0638\u2026 \u0637\u00b9\u0638\u201e\u0637\u00a7\u0637\u00ac\u0638\u2021\u0637\u06ba\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2791,10 +2882,10 @@
               }
             ],
             "url": "{{base_url}}/api/ai/poultry/chat/",
-            "description": "POST /api/ai/poultry/chat/ — Continue an existing conversation by passing the session_id returned from the previous chat request.",
+            "description": "POST /api/ai/poultry/chat/ \u00e2\u20ac\u201d Continue an existing conversation by passing the session_id returned from the previous chat request.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"message\": \"وما هي طرق الوقاية منه؟\",\n  \"session_id\": \"{{poultry_session_id}}\"\n}",
+              "raw": "{\n  \"message\": \"\u0638\u02c6\u0638\u2026\u0637\u00a7 \u0638\u2021\u0638\u0679 \u0637\u00b7\u0637\u00b1\u0638\u201a \u0637\u00a7\u0638\u201e\u0638\u02c6\u0638\u201a\u0637\u00a7\u0638\u0679\u0637\u00a9 \u0638\u2026\u0638\u2020\u0638\u2021\u0637\u06ba\",\n  \"session_id\": \"{{poultry_session_id}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2819,7 +2910,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/api/ai/poultry/chat/history/",
-            "description": "GET /api/ai/poultry/chat/history/ — Returns all chat sessions for the authenticated user, most recent first.",
+            "description": "GET /api/ai/poultry/chat/history/ \u00e2\u20ac\u201d Returns all chat sessions for the authenticated user, most recent first.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2838,7 +2929,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/api/ai/poultry/chat/{{poultry_session_id}}/",
-            "description": "GET /api/ai/poultry/chat/{session_id}/ — Returns the full message history (user + AI) for a specific chat session.",
+            "description": "GET /api/ai/poultry/chat/{session_id}/ \u00e2\u20ac\u201d Returns the full message history (user + AI) for a specific chat session.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2959,7 +3050,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/auth/profile/{{user_id}}/",
-            "description": "DELETE /api/auth/profile/{{user_id}}/ — 204 No Content. Staff only. Linked farmer/vet/company profiles CASCADE.",
+            "description": "DELETE /api/auth/profile/{{user_id}}/ \u00e2\u20ac\u201d 204 No Content. Staff only. Linked farmer/vet/company profiles CASCADE.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2978,7 +3069,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/auth/notifications/{{user_id}}/",
-            "description": "DELETE /api/auth/notifications/{{user_id}}/ — 204 No Content.",
+            "description": "DELETE /api/auth/notifications/{{user_id}}/ \u00e2\u20ac\u201d 204 No Content.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2997,7 +3088,81 @@
             "method": "DELETE",
             "header": [],
             "url": "{{base_url}}/api/auth/activity/{{user_id}}/",
-            "description": "DELETE /api/auth/activity/{{user_id}}/ — 204 No Content.",
+            "description": "DELETE /api/auth/activity/{{user_id}}/ \u00e2\u20ac\u201d 204 No Content.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List pending vet verifications (admin only)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/vets/pending-verification/",
+            "description": "GET /api/vets/pending-verification/ \u2014 Admin endpoint to view all vets pending verification.\n\nRequires admin (is_staff) token.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  var list = Array.isArray(j) ? j : (j.results || []);",
+                  "  if (list.length && list[0].id) {",
+                  "    pm.collectionVariables.set(\"pending_vet_id\", String(list[0].id));",
+                  "  }",
+                  "} catch (e) {}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify vet (admin approve)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/vets/{{pending_vet_id}}/admin-verify/",
+            "description": "POST /api/vets/{{vet_id}}/admin-verify/ \u2014 Admin approves a pending vet registration.\n\nAfter approval, vet can login.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject vet (admin delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/vets/{{pending_vet_id}}/admin-reject/",
+            "description": "DELETE /api/vets/{{vet_id}}/admin-reject/ \u2014 Admin rejects and deletes a pending vet registration.\n\nPermanently removes the vet account and profile.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -3024,7 +3189,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/auth/profile/delete-all/",
-                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/auth/profile/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.\n\n⚠️ This also deletes all linked profiles (farmer, vet, company) via CASCADE.",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/auth/profile/delete-all/` \u00e2\u20ac\u201d deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.\n\n\u00e2\u0691\u00a0\u00ef\u00b8\u0688 This also deletes all linked profiles (farmer, vet, company) via CASCADE.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -3057,7 +3222,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/auth/notifications/delete-all/",
-                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/auth/notifications/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/auth/notifications/delete-all/` \u00e2\u20ac\u201d deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -3090,7 +3255,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/auth/activity/delete-all/",
-                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/auth/activity/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/auth/activity/delete-all/` \u00e2\u20ac\u201d deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -3128,7 +3293,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/farmers/profile/delete-all/",
-                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/farmers/profile/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/farmers/profile/delete-all/` \u00e2\u20ac\u201d deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -3161,7 +3326,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/farmers/flocks/delete-all/",
-                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/farmers/flocks/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/farmers/flocks/delete-all/` \u00e2\u20ac\u201d deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -3199,7 +3364,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/vets/profiles/delete-all/",
-                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/vets/profiles/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/vets/profiles/delete-all/` \u00e2\u20ac\u201d deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -3232,7 +3397,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/vets/reviews/delete-all/",
-                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/vets/reviews/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/vets/reviews/delete-all/` \u00e2\u20ac\u201d deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -3270,7 +3435,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/companies/companies/delete-all/",
-                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/companies/companies/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/companies/companies/delete-all/` \u00e2\u20ac\u201d deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -3308,7 +3473,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/ecommerce/products/delete-all/",
-                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/ecommerce/products/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.\n\nImages, reviews, and cart items CASCADE.",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/ecommerce/products/delete-all/` \u00e2\u20ac\u201d deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.\n\nImages, reviews, and cart items CASCADE.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -3341,7 +3506,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/ecommerce/categories/delete-all/",
-                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/ecommerce/categories/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.\n\nProducts in those categories CASCADE.",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/ecommerce/categories/delete-all/` \u00e2\u20ac\u201d deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.\n\nProducts in those categories CASCADE.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -3374,7 +3539,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/ecommerce/product-images/delete-all/",
-                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/ecommerce/product-images/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/ecommerce/product-images/delete-all/` \u00e2\u20ac\u201d deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -3407,7 +3572,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/ecommerce/cart/delete-all/",
-                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/ecommerce/cart/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/ecommerce/cart/delete-all/` \u00e2\u20ac\u201d deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -3445,7 +3610,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/orders/orders/delete-all/",
-                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/orders/orders/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/orders/orders/delete-all/` \u00e2\u20ac\u201d deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -3483,7 +3648,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/medical/slots/delete-all/",
-                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/medical/slots/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/medical/slots/delete-all/` \u00e2\u20ac\u201d deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -3516,7 +3681,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/medical/appointments/delete-all/",
-                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/medical/appointments/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/medical/appointments/delete-all/` \u00e2\u20ac\u201d deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -3549,7 +3714,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/medical/prescriptions/delete-all/",
-                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/medical/prescriptions/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/medical/prescriptions/delete-all/` \u00e2\u20ac\u201d deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -3587,7 +3752,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/social/posts/delete-all/",
-                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/social/posts/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.\n\nComments and likes CASCADE.",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/social/posts/delete-all/` \u00e2\u20ac\u201d deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.\n\nComments and likes CASCADE.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -3620,7 +3785,7 @@
                 "method": "DELETE",
                 "header": [],
                 "url": "{{base_url}}/api/social/comments/delete-all/",
-                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/social/comments/delete-all/` — deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
+                "description": "**Staff only (`is_staff=True`).** `DELETE {{base_url}}/api/social/comments/delete-all/` \u00e2\u20ac\u201d deletes every row in the table. Response: `200` `{ \"deleted\": <int> }`.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -3650,7 +3815,7 @@
           ]
         }
       ],
-      "description": "One `DELETE .../delete-all/` per table. All require a **staff JWT** (`is_staff=True`). Login as a superuser (`python manage.py createsuperuser`) then use **Login - Admin**.\n\n⚠️ These are **irreversible**. Use with care."
+      "description": "One `DELETE .../delete-all/` per table. All require a **staff JWT** (`is_staff=True`). Login as a superuser (`python manage.py createsuperuser`) then use **Login - Admin**.\n\n\u00e2\u0691\u00a0\u00ef\u00b8\u0688 These are **irreversible**. Use with care."
     }
   ]
 }
