@@ -28,6 +28,7 @@ def _http_url_from_initial_image_url(initial_data):
 
 class PostSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
     likes_count = serializers.SerializerMethodField(read_only=True)
     is_liked_by_me = serializers.SerializerMethodField(read_only=True)
     # Full URL for clients (uploaded file or legacy external link)
@@ -51,6 +52,7 @@ class PostSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "user",
+            "user_id",
             "content",
             "image",
             "remote_image_url",
@@ -187,6 +189,7 @@ class PostSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
 
     class Meta:
         model = Comment
