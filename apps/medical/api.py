@@ -14,6 +14,9 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
 
 
 class PrescriptionSerializer(serializers.ModelSerializer):
+    vet_user_id = serializers.IntegerField(source="vet.user.id", read_only=True)
+    farmer_user_id = serializers.IntegerField(source="farmer.user.id", read_only=True)
+
     class Meta:
         model = Prescription
         fields = '__all__'
@@ -32,7 +35,9 @@ class AppointmentSlotSerializer(serializers.ModelSerializer):
 
 class AppointmentSerializer(serializers.ModelSerializer):
     vet_name = serializers.CharField(source="vet.user.name", read_only=True)
+    vet_user_id = serializers.IntegerField(source="vet.user.id", read_only=True)
     farmer_name = serializers.CharField(source="farmer.user.name", read_only=True)
+    farmer_user_id = serializers.IntegerField(source="farmer.user.id", read_only=True)
 
     class Meta:
         model = Appointment
@@ -40,8 +45,10 @@ class AppointmentSerializer(serializers.ModelSerializer):
             "id",
             "farmer",
             "farmer_name",
+            "farmer_user_id",
             "vet",
             "vet_name",
+            "vet_user_id",
             "slot",
             "status",
             "scheduled_start",
