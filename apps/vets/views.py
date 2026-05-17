@@ -84,7 +84,9 @@ class VetRegistrationView(generics.CreateAPIView):
         self.perform_create(serializer)
 
         vet_profile = serializer.instance
-        response_serializer = VetRegistrationResponseSerializer(vet_profile)
+        response_serializer = VetRegistrationResponseSerializer(
+            vet_profile, context={'request': request}
+        )
 
         message = (
             "Registration successful. Please check your email to confirm your account. "

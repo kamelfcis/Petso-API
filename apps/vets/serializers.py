@@ -74,7 +74,7 @@ class VetRegistrationSerializer(serializers.Serializer):
 
 class VetRegistrationResponseSerializer(serializers.Serializer):
     """Serializer for vet registration response."""
-    id = serializers.IntegerField(source='id')
+    id = serializers.IntegerField()
     user = UserSerializer(read_only=True)
     license_number = serializers.CharField()
     license_document = serializers.SerializerMethodField()
@@ -87,7 +87,11 @@ class VetRegistrationResponseSerializer(serializers.Serializer):
 
     def get_license_document(self, obj):
         if obj.license_document:
-            return obj.license_document.url
+            request = self.context.get('request')
+            url = obj.license_document.url
+            if request is not None:
+                return request.build_absolute_uri(url)
+            return url
         return None
 
 class VetReviewSerializer(serializers.ModelSerializer):
