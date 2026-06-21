@@ -1726,6 +1726,26 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/api/orders/orders/",
+            "description": "Buyer (farmer/vet): returns orders placed by the authenticated user.\n\nAdmin: all orders; optional filters `?company=3&status=pending`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List orders (company vendor)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/orders/orders/",
+            "description": "Login as a **company** user (e.g. `company.demo@petso.local` / company id **3**). Returns incoming orders for that vendor's store (`order.company.user == request.user`). No `?company=` query param needed — scoped automatically by role.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1791,6 +1811,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/api/orders/status-history/",
+            "description": "Buyer: history for orders they placed. **Company vendor**: history for orders on their store (same scoping as List orders). Admin: all history.",
             "auth": {
               "type": "bearer",
               "bearer": [

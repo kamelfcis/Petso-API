@@ -15,12 +15,16 @@ class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.prefetch_related('items', 'items__product').all()
     serializer_class = OrderSerializer
     permission_classes = (permissions.IsAuthenticated,)
+    filterset_fields = ['company', 'status']
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if self.request.user.role == 'admin':
+        user = self.request.user
+        if user.role == 'admin':
             return qs
-        return qs.filter(user=self.request.user)
+        if user.role == 'company':
+            return qs.filter(company__user=user)
+        return qs.filter(user=user)
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -67,9 +71,15 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Response({"deleted": n}, status=status.HTTP_200_OK)
 
 class OrderStatusHistoryViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = OrderStatusHistory.objects.all()
+    queryset = OrderStatusHistory.objects.select_related('order').all()
     serializer_class = OrderStatusHistorySerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        return self.queryset.filter(order__user=self.request.user)
+        qs = super().get_queryset()
+        user = self.request.user
+        if user.role == 'admin':
+            return qs
+        if user.role == 'company':
+            return qs.filter(order__company__user=user)
+        return qs.filter(order__user=user)
