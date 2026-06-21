@@ -2,8 +2,18 @@ from django.db import models
 from django.conf import settings
 
 class Post(models.Model):
+    STATUS_PENDING = "pending"
+    STATUS_APPROVED = "approved"
+    STATUS_REJECTED = "rejected"
+    STATUS_CHOICES = (
+        (STATUS_PENDING, "Pending"),
+        (STATUS_APPROVED, "Approved"),
+        (STATUS_REJECTED, "Rejected"),
+    )
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='posts')
     content = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
     # Uploaded file (preferred). Served under MEDIA_URL.
     image = models.ImageField(upload_to="social/posts/", blank=True, null=True)
     # Legacy / optional external-only link when no file is stored.

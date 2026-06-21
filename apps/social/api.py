@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.db.models import Q
 from rest_framework import serializers, viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -54,6 +55,7 @@ class PostSerializer(serializers.ModelSerializer):
             "user",
             "user_id",
             "content",
+            "status",
             "image",
             "remote_image_url",
             "image_base64",
@@ -62,7 +64,7 @@ class PostSerializer(serializers.ModelSerializer):
             "likes_count",
             "is_liked_by_me",
         )
-        read_only_fields = ("image_url",)
+        read_only_fields = ("image_url", "status")
         extra_kwargs = {"image": {"required": False, "allow_null": True}}
 
     def get_image_url(self, obj):
@@ -202,6 +204,15 @@ class PostViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     parser_classes = (JSONParser, MultiPartParser, FormParser)
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        if user.is_authenticated and user.is_staff:
+            return qs
+        if user.is_authenticated:
+            return qs.filter(Q(status=Post.STATUS_APPROVED) | Q(user=user))
+        return qs.filter(status=Post.STATUS_APPROVED)
+
     @staticmethod
     def _write_request_data(request):
         """
@@ -227,7 +238,11 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        data = dict(serializer.data)
+        data["message"] = (
+            "Post submitted for review. It will appear in the public feed after admin approval."
+        )
+        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
@@ -256,9 +271,13 @@ class PostViewSet(viewsets.ModelViewSet):
         """
         raw = self._file_image_from_request()
         if raw is not None:
-            serializer.save(user=self.request.user, image=raw)
+            serializer.save(
+                user=self.request.user,
+                image=raw,
+                status=Post.STATUS_PENDING,
+            )
             return
-        serializer.save(user=self.request.user)
+        serializer.save(user=self.request.user, status=Post.STATUS_PENDING)
 
     def perform_update(self, serializer):
         raw = self._file_image_from_request()
@@ -276,6 +295,11 @@ class PostViewSet(viewsets.ModelViewSet):
     def like(self, request, pk=None):
         """Toggle like on a post. Returns liked=True/False and current likes_count."""
         post = self.get_object()
+        if post.status != Post.STATUS_APPROVED and not request.user.is_staff:
+            return Response(
+                {"detail": "Likes are only allowed on approved posts."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         like_obj, created = PostLike.objects.get_or_create(post=post, user=request.user)
         if not created:
             like_obj.delete()
@@ -284,6 +308,82 @@ class PostViewSet(viewsets.ModelViewSet):
             liked = True
         return Response(
             {"liked": liked, "likes_count": post.likes.count()},
+            status=status.HTTP_200_OK,
+        )
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="pending",
+        permission_classes=(permissions.IsAdminUser,),
+    )
+    def pending(self, request):
+        """List posts awaiting admin moderation."""
+        qs = Post.objects.filter(status=Post.STATUS_PENDING).order_by("-created_at")
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="admin-approve",
+        permission_classes=(permissions.IsAdminUser,),
+    )
+    def admin_approve(self, request, pk=None):
+        try:
+            post = Post.objects.get(pk=pk)
+        except Post.DoesNotExist:
+            return Response(
+                {"detail": "Post not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if post.status == Post.STATUS_APPROVED:
+            return Response(
+                {"detail": "This post is already approved."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        post.status = Post.STATUS_APPROVED
+        post.save(update_fields=["status"])
+        return Response(
+            {
+                "detail": "Post approved successfully.",
+                "post_id": post.id,
+                "status": post.status,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="admin-reject",
+        permission_classes=(permissions.IsAdminUser,),
+    )
+    def admin_reject(self, request, pk=None):
+        try:
+            post = Post.objects.get(pk=pk)
+        except Post.DoesNotExist:
+            return Response(
+                {"detail": "Post not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if post.status == Post.STATUS_REJECTED:
+            return Response(
+                {"detail": "This post is already rejected."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        post.status = Post.STATUS_REJECTED
+        post.save(update_fields=["status"])
+        return Response(
+            {
+                "detail": "Post rejected successfully.",
+                "post_id": post.id,
+                "status": post.status,
+            },
             status=status.HTTP_200_OK,
         )
 
@@ -300,7 +400,24 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        if user.is_authenticated and user.is_staff:
+            return qs
+        visible_posts = Post.objects.filter(status=Post.STATUS_APPROVED)
+        if user.is_authenticated:
+            visible_posts = Post.objects.filter(
+                Q(status=Post.STATUS_APPROVED) | Q(user=user)
+            )
+        return qs.filter(post__in=visible_posts)
+
     def perform_create(self, serializer):
+        post = serializer.validated_data["post"]
+        if post.status != Post.STATUS_APPROVED and not self.request.user.is_staff:
+            raise ValidationError(
+                {"post": "Comments are only allowed on approved posts."}
+            )
         serializer.save(user=self.request.user)
 
     @action(detail=False, methods=["delete"], url_path="delete-all",

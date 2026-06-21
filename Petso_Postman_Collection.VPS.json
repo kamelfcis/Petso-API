@@ -166,6 +166,11 @@
       "type": "string"
     },
     {
+      "key": "pending_post_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
       "key": "comment_id",
       "value": "1",
       "type": "string"
@@ -2283,6 +2288,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/api/social/posts/",
+            "description": "GET /api/social/posts/ — Public feed shows **approved** posts only.\n\nAuthenticated authors also see their own **pending** and **rejected** posts.\n\nAdmin (`is_staff`) sees all posts regardless of status.\n\nEach post includes `status`: `pending` | `approved` | `rejected`.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2316,7 +2322,7 @@
                 }
               ]
             },
-            "description": "Default flow: Body **form-data**. `content` = **Text**; `image` = **File** (Select Files). Same pattern as **Create product**. If Postman shows a **yellow warning** on the filename, re-pick the file. Leave headers empty. On VPS, nginx: `client_max_body_size 10m;` for `/api/`.",
+            "description": "Default flow: Body **form-data**. `content` = **Text**; `image` = **File** (Select Files). Same pattern as **Create product**. If Postman shows a **yellow warning** on the filename, re-pick the file. Leave headers empty. On VPS, nginx: `client_max_body_size 10m;` for `/api/`.\n\nResponse `201`: post JSON with `status: \"pending\"` and `message` explaining admin review. Post is **not** visible in other users' feeds until approved.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -3231,6 +3237,80 @@
             "header": [],
             "url": "{{base_url}}/api/vets/{{pending_vet_id}}/admin-reject/",
             "description": "DELETE /api/vets/{{vet_id}}/admin-reject/ \u2014 Admin rejects and deletes a pending vet registration.\n\nPermanently removes the vet account and profile.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List pending community posts (admin only)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/social/posts/pending/",
+            "description": "GET /api/social/posts/pending/ \u2014 Admin endpoint to list posts awaiting moderation (`status=pending`).\n\nRequires admin (`is_staff`) Bearer token.\n\nResponse: paginated list of post objects (same shape as public feed, including `status`).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  var list = Array.isArray(j) ? j : (j.results || []);",
+                  "  if (list.length && list[0].id) {",
+                  "    pm.collectionVariables.set(\"pending_post_id\", String(list[0].id));",
+                  "  }",
+                  "} catch (e) {}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Approve community post (admin)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/social/posts/{{pending_post_id}}/admin-approve/",
+            "description": "POST /api/social/posts/{{post_id}}/admin-approve/ \u2014 Admin approves a pending post.\n\nNo request body.\n\nResponse `200`: `{ \"detail\": \"Post approved successfully.\", \"post_id\": <int>, \"status\": \"approved\" }`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject community post (admin)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/social/posts/{{pending_post_id}}/admin-reject/",
+            "description": "POST /api/social/posts/{{post_id}}/admin-reject/ \u2014 Admin rejects a pending post (sets `status=rejected`; post is not deleted).\n\nNo request body.\n\nResponse `200`: `{ \"detail\": \"Post rejected successfully.\", \"post_id\": <int>, \"status\": \"rejected\" }`.",
             "auth": {
               "type": "bearer",
               "bearer": [
