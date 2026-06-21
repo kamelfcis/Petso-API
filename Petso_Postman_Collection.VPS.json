@@ -1806,6 +1806,53 @@
           ]
         },
         {
+          "name": "Update order status (company vendor)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/orders/orders/{{order_id}}/status/",
+            "description": "Login as a **company** user (vendor). Updates status for an order on that vendor's store only (`order.company.user == request.user`).\n\nAllowed statuses: `pending`, `confirmed`, `processing`, `shipped`, `delivered`, `cancelled`.\n\nCreates an `OrderStatusHistory` row (`old_status`, `new_status`, `changed_by`).\n\nFarmers/vets cannot call this endpoint (403). Admin can update any order.\n\nResponse: `200` full order JSON (same shape as create/list).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var j = pm.response.json();",
+                  "  console.log('Order status updated to', j.status);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
           "name": "List order status history",
           "request": {
             "method": "GET",

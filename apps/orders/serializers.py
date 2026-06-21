@@ -21,6 +21,10 @@ class OrderSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('user', 'order_number', 'status', 'total')
 
+class OrderStatusUpdateSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=[c[0] for c in Order.ORDER_STATUS])
+
+
 class OrderStatusHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderStatusHistory

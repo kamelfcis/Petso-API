@@ -3,12 +3,17 @@ import uuid
 
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
 from apps.ecommerce.models import Cart, CartItem
 from .models import Order, OrderItem, OrderStatusHistory
-from .serializers import OrderSerializer, OrderItemSerializer, OrderStatusHistorySerializer
+from .serializers import (
+    OrderSerializer,
+    OrderItemSerializer,
+    OrderStatusHistorySerializer,
+    OrderStatusUpdateSerializer,
+)
 
 
 class OrderViewSet(viewsets.ModelViewSet):
@@ -62,6 +67,34 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         # Clear the cart after order is placed
         CartItem.objects.filter(cart=cart).delete()
+
+    @action(detail=True, methods=["patch"], url_path="status")
+    def update_status(self, request, pk=None):
+        user = request.user
+        if user.role not in ("admin", "company"):
+            raise PermissionDenied("Only company vendors and admins can update order status.")
+
+        order = self.get_object()
+
+        serializer = OrderStatusUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        new_status = serializer.validated_data["status"]
+
+        if new_status == order.status:
+            return Response(OrderSerializer(order).data)
+
+        old_status = order.status
+        order.status = new_status
+        order.save(update_fields=["status"])
+
+        OrderStatusHistory.objects.create(
+            order=order,
+            old_status=old_status,
+            new_status=new_status,
+            changed_by=user,
+        )
+
+        return Response(OrderSerializer(order).data)
 
     @action(detail=False, methods=["delete"], url_path="delete-all",
             permission_classes=(permissions.IsAdminUser,))
